@@ -194,7 +194,7 @@ class Moderation(commands.Cog):
 async def setup(bot):
     # Create and add the cog instance to the bot
     cog = Moderation(bot)
-    await bot.add_cog(cog)
+    await bot.add_cog(Moderation(bot))
     
     # Start the temporary ban checker
     await cog.check_temp_bans()
