@@ -32,6 +32,10 @@ class Moderation(commands.Cog):
         mod_channel = discord.utils.get(guild.channels, name='mod-logs')
         if mod_channel:
             await mod_channel.send(embed=embed)
+
+    async def check_temp_bans(self):
+        """Check and unban users whose temporary ban has expired"""
+        await self.bot.wait_until_ready()
         
         while not self.bot.is_closed():
             try:
@@ -86,7 +90,7 @@ class Moderation(commands.Cog):
             
             await asyncio.sleep(60)  # Check every minute
 
-
+    
     async def cog_load(self):
         """This is called when the cog is loaded"""
         self.temp_ban_task = self.bot.loop.create_task(self.check_temp_bans())
