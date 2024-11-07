@@ -5,10 +5,11 @@ from dotenv import load_dotenv
 import asyncio
 import logging
 from datetime import datetime
+from utils.database import Database  # Add this import
 
 # Set up logging with less verbose output
 logging.basicConfig(
-    level=logging.INFO,  # Change back to INFO level
+    level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.FileHandler(filename='bot.log', encoding='utf-8', mode='a'),
@@ -37,6 +38,7 @@ class AdminBot(commands.Bot):
         
         self.start_time = datetime.utcnow()
         self.logger = logging.getLogger('AdminBot')
+        self.db = Database('data/user_logs.json')  # Create single database instance
     
     async def setup_hook(self):
         """Setup hook that gets called before the bot starts"""
