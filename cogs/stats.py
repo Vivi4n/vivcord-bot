@@ -3,6 +3,7 @@ import discord
 from utils.database import Database
 from datetime import datetime, timedelta
 import os
+import json
 
 class Stats(commands.Cog):
     def __init__(self, bot):
