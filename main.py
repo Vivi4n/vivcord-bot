@@ -79,7 +79,8 @@ class AdminBot(commands.Bot):
             'moderation',
             'mute',
             'warnings',
-            'error_handler'
+            'error_handler',
+            'stats'
         ]
         
         for cog in cogs:
