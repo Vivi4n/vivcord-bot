@@ -4,11 +4,12 @@ import os
 from dotenv import load_dotenv
 import asyncio
 import logging
+import traceback
 from datetime import datetime
 
-# Set up logging
+# Set up logging with more verbose output
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,  # Change to DEBUG level
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.FileHandler(filename='bot.log', encoding='utf-8', mode='a'),
@@ -31,7 +32,7 @@ class AdminBot(commands.Bot):
         super().__init__(
             command_prefix='!',
             intents=intents,
-            case_insensitive=True,  # Commands will work regardless of case
+            case_insensitive=True,
             help_command=commands.DefaultHelpCommand(
                 no_category="Other"
             )
@@ -44,24 +45,30 @@ class AdminBot(commands.Bot):
     async def setup_hook(self):
         """Setup hook that gets called before the bot starts"""
         try:
+            self.logger.debug("Starting setup hook...")
+            
             # Create necessary directories
             directories = ['data', 'logs']
             for directory in directories:
                 os.makedirs(directory, exist_ok=True)
+                self.logger.debug(f"Created/verified directory: {directory}")
             
             # Ensure utils and cogs directories exist
             os.makedirs('utils', exist_ok=True)
             os.makedirs('cogs', exist_ok=True)
+            self.logger.debug("Created/verified utils and cogs directories")
             
             # Create __init__.py files if they don't exist
             open('utils/__init__.py', 'a').close()
             open('cogs/__init__.py', 'a').close()
+            self.logger.debug("Created/verified __init__.py files")
             
             # Load all cogs
             await self.load_cogs()
             
         except Exception as e:
             self.logger.error(f"Error in setup: {str(e)}")
+            self.logger.error(traceback.format_exc())
     
     async def load_cogs(self):
         """Load all cogs from the cogs directory"""
@@ -73,17 +80,17 @@ class AdminBot(commands.Bot):
             'mute',
             'warnings',
             'error_handler',
-            'logger' # I FORGOR SKULLEMOJI
+            'logger'
         ]
         
         for cog in cogs:
             try:
-                self.logger.info(f'Attempting to load cog: {cog}')
+                self.logger.debug(f'Starting to load cog: {cog}')
+                self.logger.debug(f'Looking for cog at: cogs.{cog}')
                 await self.load_extension(f'cogs.{cog}')
                 self.logger.info(f'Successfully loaded cog: {cog}')
             except Exception as e:
                 self.logger.error(f'Failed to load cog {cog}: {str(e)}')
-                import traceback
                 self.logger.error(traceback.format_exc())
     
     async def on_ready(self):
@@ -95,40 +102,9 @@ class AdminBot(commands.Bot):
         await self.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.watching,
-                name="for rule breakers"
+                name="for fat people"
             )
         )
-    
-    async def on_guild_join(self, guild):
-        """Called when the bot joins a new guild"""
-        self.logger.info(f'Joined new guild: {guild.name} (id: {guild.id})')
-        
-        # Initialize moderation logs channel
-        try:
-            if not discord.utils.get(guild.channels, name='mod-logs'):
-                await guild.create_text_channel('mod-logs')
-                self.logger.info(f'Created mod-logs channel in {guild.name}')
-        except discord.Forbidden:
-            self.logger.warning(f'Could not create mod-logs channel in {guild.name}: Missing permissions')
-    
-    async def on_guild_remove(self, guild):
-        """Called when the bot is removed from a guild"""
-        self.logger.info(f'Removed from guild: {guild.name} (id: {guild.id})')
-    
-    async def on_command_error(self, ctx, error):
-        """Global error handler for command errors"""
-        if isinstance(error, commands.CommandNotFound):
-            await ctx.send("Command not found. Use !help to see available commands.")
-        elif isinstance(error, commands.MissingPermissions):
-            await ctx.send("You don't have permission to use this command!")
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(f"Missing required argument: {error.param.name}")
-        elif isinstance(error, commands.BadArgument):
-            await ctx.send("Bad argument provided. Please check the command usage with !help")
-        else:
-            # Log unexpected errors
-            self.logger.error(f'Unexpected error in {ctx.command}: {str(error)}')
-            await ctx.send("An unexpected error occurred. Please try again later.")
 
 async def main():
     try:
@@ -148,6 +124,7 @@ async def main():
         logging.error("Failed to login: Invalid Discord token")
     except Exception as e:
         logging.error(f"Fatal error: {str(e)}")
+        logging.error(traceback.format_exc())
 
 if __name__ == '__main__':
     try:
@@ -156,3 +133,4 @@ if __name__ == '__main__':
         logging.info("Bot shutting down...")
     except Exception as e:
         logging.error(f"Fatal error: {str(e)}")
+        logging.error(traceback.format_exc())
