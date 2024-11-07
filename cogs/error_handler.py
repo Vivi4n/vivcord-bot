@@ -7,12 +7,9 @@ class ErrorHandler(commands.Cog):
     
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-        # Ignore CommandNotFound errors
         if isinstance(error, commands.CommandNotFound):
             return
-
-        # Handle other errors
-        if isinstance(error, commands.MissingPermissions):
+        elif isinstance(error, commands.MissingPermissions):
             await ctx.send("Oi wtf are you tryin' to do?")
         elif isinstance(error, commands.MemberNotFound):
             await ctx.send("Fucker ain't here.")
