@@ -10,8 +10,23 @@ class Mute(commands.Cog):
         self.bot = bot
         self.db = Database('data/user_logs.json')
         self.temp_mutes = {}
-        self.load_active_mutes()
-    
+        self.load_active_mutes()  # This calls the method we're about to define
+
+    def load_active_mutes(self):  # Add this method right here
+        """Load active temporary mutes from the database"""
+        try:
+            for user_id, user_data in self.db.data.items():
+                for mute in user_data.get('mutes', []):
+                    if mute.get('expires_at'):
+                        expires_at = datetime.fromisoformat(mute['expires_at'])
+                        if expires_at > datetime.utcnow():
+                            self.temp_mutes[user_id] = {
+                                'guild_id': mute['guild_id'],
+                                'expires_at': expires_at
+                            }
+        except Exception as e:
+            print(f"Error loading active mutes: {e}")
+
     async def log_to_modchannel(self, guild, embed):
         """Send log message to mod-logs channel"""
         mod_channel = discord.utils.get(guild.channels, name='mod-logs')
