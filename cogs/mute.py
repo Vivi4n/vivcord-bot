@@ -8,7 +8,7 @@ import asyncio
 class Mute(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.db = Database('data/user_logs.json')
+        self.db = bot.db  # Use bot's database instance
         self.temp_mutes = {}
         self.load_active_mutes()
 

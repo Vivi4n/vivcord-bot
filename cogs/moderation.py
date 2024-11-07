@@ -8,9 +8,9 @@ import asyncio
 class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.db = Database('data/user_logs.json')
+        self.db = bot.db  # Use bot's database instance
         self.temp_bans = {}
-        self.load_active_bans()  # This calls the method we're about to define
+        self.load_active_bans()
 
     def load_active_bans(self):  # Add this method right here
         """Load active temporary bans from the database"""

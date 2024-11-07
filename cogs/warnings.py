@@ -7,7 +7,7 @@ import logging
 class Warnings(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.db = Database('data/user_logs.json')
+        self.db = bot.db  # Use bot's database instance
         self.logger = logging.getLogger('Warnings')
 
     async def log_to_modchannel(self, guild, embed):

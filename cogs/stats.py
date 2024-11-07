@@ -8,7 +8,7 @@ import json
 class Stats(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.db = Database('data/user_logs.json')
+        self.db = bot.db  # Use bot's database instance
         self.voice_time_tracker = {}
 
     @commands.Cog.listener()
