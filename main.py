@@ -71,7 +71,6 @@ class AdminBot(commands.Bot):
             self.logger.error(traceback.format_exc())
     
     async def load_cogs(self):
-    """Load all cogs from the cogs directory"""
         self.logger.info("Loading cogs...")
     
     # List of cogs to load (removed 'logger' since it's a utility module)
