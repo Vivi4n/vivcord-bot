@@ -2,17 +2,13 @@ from discord.ext import commands
 import discord
 from utils.database import Database
 from datetime import datetime
+import logging
 
 class Warnings(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.db = Database('data/user_logs.json')
-
-    async def log_to_modchannel(self, guild, embed):
-        """Send log message to mod-logs channel"""
-        mod_channel = discord.utils.get(guild.channels, name='mod-logs')
-        if mod_channel:
-            await mod_channel.send(embed=embed)
+        self.logger = logging.getLogger('Warnings')
 
     @commands.command()
     @commands.has_permissions(kick_members=True)
@@ -22,6 +18,28 @@ class Warnings(commands.Cog):
             await ctx.send("nope.")
             return
 
+        self.logger.info(f"Warning user {member.id} ({member.name})")
+        
+        warning_data = {
+            "reason": reason or "No reason provided",
+            "moderator": ctx.author.id,
+            "moderator_name": str(ctx.author),
+            "timestamp": str(datetime.utcnow())
+        }
+        
+        # Log to database
+        try:
+            self.db.log_action(
+                member.id,
+                "warnings",  # Using plural form consistently
+                warning_data
+            )
+            self.logger.info(f"Successfully logged warning for {member.id}")
+        except Exception as e:
+            self.logger.error(f"Failed to log warning: {str(e)}")
+            await ctx.send("Failed to log warning. Please check the bot logs.")
+            return
+        
         # Create embed for mod-logs
         embed = discord.Embed(
             title="Member Warned",
@@ -34,17 +52,10 @@ class Warnings(commands.Cog):
         embed.set_footer(text=f"User ID: {member.id}")
         
         # Send to mod-logs
-        await self.log_to_modchannel(ctx.guild, embed)
-        
-        warning_data = {
-            "reason": reason,
-            "moderator": ctx.author.id,
-            "moderator_name": str(ctx.author),
-            "timestamp": str(datetime.utcnow())
-        }
-        
-        # Using "warnings" instead of "warning" for consistency
-        self.db.log_action(member.id, "warnings", warning_data)
+        try:
+            await self.log_to_modchannel(ctx.guild, embed)
+        except Exception as e:
+            self.logger.error(f"Failed to send to mod channel: {str(e)}")
         
         await ctx.send(f"{member.mention} has been warned. Reason: {reason or 'No reason provided'}")
 
@@ -52,9 +63,14 @@ class Warnings(commands.Cog):
     @commands.has_permissions(kick_members=True)
     async def warnings(self, ctx, member: discord.Member):
         """Check warnings for a member"""
-        user_data = self.db.ensure_user_data(str(member.id))
+        self.logger.info(f"Checking warnings for {member.id} ({member.name})")
         
-        if not user_data.get("warnings", []):
+        user_data = self.db.ensure_user_data(str(member.id))
+        warnings = user_data.get("warnings", [])
+        
+        self.logger.info(f"Found {len(warnings)} warnings for {member.id}")
+        
+        if not warnings:
             await ctx.send(f"{member.mention} has no warnings.")
             return
         
@@ -64,7 +80,7 @@ class Warnings(commands.Cog):
             timestamp=datetime.utcnow()
         )
         
-        for i, warning in enumerate(user_data["warnings"], 1):
+        for i, warning in enumerate(warnings, 1):
             embed.add_field(
                 name=f"Warning {i}",
                 value=f"Reason: {warning.get('reason', 'No reason provided')}\n"
