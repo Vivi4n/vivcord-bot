@@ -38,7 +38,7 @@ class AdminBot(commands.Bot):
         
         self.start_time = datetime.utcnow()
         self.logger = logging.getLogger('AdminBot')
-        self.db = Database('data/user_logs.json')  # Create single database instance
+        self.db = Database('data/user_logs.json')
     
     async def setup_hook(self):
         """Setup hook that gets called before the bot starts"""
@@ -55,6 +55,9 @@ class AdminBot(commands.Bot):
             # Load all cogs
             await self.load_cogs()
             
+            # Sync slash commands
+            await self.tree.sync()
+            
         except Exception as e:
             self.logger.error(f"Error in setup: {str(e)}")
     
@@ -67,7 +70,8 @@ class AdminBot(commands.Bot):
             'mute',
             'warnings',
             'error_handler',
-            'stats'
+            'stats',
+            'anime_commands'
         ]
         
         for cog in cogs:
