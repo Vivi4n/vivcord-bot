@@ -1,10 +1,12 @@
 from discord.ext import commands
 import discord
-from utils.logger import log_action
+from utils.database import Database
+from datetime import datetime
 
 class Mute(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.db = Database('data/user_logs.json')
     
     async def ensure_muted_role(self, guild):
         muted_role = discord.utils.get(guild.roles, name="Muted")
@@ -20,8 +22,19 @@ class Mute(commands.Cog):
         """Mute a member"""
         muted_role = await self.ensure_muted_role(ctx.guild)
         await member.add_roles(muted_role, reason=reason)
+        
+        self.db.log_action(
+            member.id,
+            "mute",
+            {
+                "reason": reason,
+                "moderator": ctx.author.id,
+                "moderator_name": f"{ctx.author.name}#{ctx.author.discriminator}",
+                "timestamp": str(datetime.utcnow())
+            }
+        )
+        
         await ctx.send(f"{member.mention} has been muted. Reason: {reason}")
-        await log_action(ctx.guild, "Mute", member, ctx.author, reason)
     
     @commands.command()
     @commands.has_permissions(manage_roles=True)
@@ -30,8 +43,19 @@ class Mute(commands.Cog):
         muted_role = discord.utils.get(ctx.guild.roles, name="Muted")
         if muted_role in member.roles:
             await member.remove_roles(muted_role)
+            
+            self.db.log_action(
+                member.id,
+                "unmute",
+                {
+                    "reason": "Unmuted by moderator",
+                    "moderator": ctx.author.id,
+                    "moderator_name": f"{ctx.author.name}#{ctx.author.discriminator}",
+                    "timestamp": str(datetime.utcnow())
+                }
+            )
+            
             await ctx.send(f"{member.mention} has been unmuted.")
-            await log_action(ctx.guild, "Unmute", member, ctx.author, "Unmuted by moderator")
 
 async def setup(bot):
     await bot.add_cog(Mute(bot))
