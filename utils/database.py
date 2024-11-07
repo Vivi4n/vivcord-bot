@@ -17,7 +17,8 @@ class Database:
         with open(self.filename, 'w') as f:
             json.dump(self.data, f, indent=4)
     
-    def log_action(self, user_id, action_type, details):
+    def ensure_user_data(self, user_id):
+        """Ensure user entry exists with all required fields"""
         user_id = str(user_id)
         if user_id not in self.data:
             self.data[user_id] = {
@@ -27,17 +28,24 @@ class Database:
                 "mutes": [],
                 "messages": 0,
                 "message_deletes": 0,
-                "voice_time": 0,  # in minutes
+                "voice_time": 0,
                 "join_date": str(datetime.utcnow()),
                 "last_seen": str(datetime.utcnow()),
                 "action_history": []
             }
+        return self.data[user_id]
+    
+    def log_action(self, user_id, action_type, details):
+        """Log an action with proper user data initialization"""
+        user_data = self.ensure_user_data(user_id)
         
+        # Add to specific category if it exists
         if action_type in ["warning", "kick", "ban", "mute"]:
             category = f"{action_type}s"
-            self.data[user_id][category].append(details)
+            user_data[category].append(details)
         
-        self.data[user_id]["action_history"].append({
+        # Add to general action history
+        user_data["action_history"].append({
             "type": action_type,
             "details": details,
             "timestamp": str(datetime.utcnow())
