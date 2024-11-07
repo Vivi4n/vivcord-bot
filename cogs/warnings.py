@@ -19,7 +19,7 @@ class Warnings(commands.Cog):
     async def warn(self, ctx, member: discord.Member, *, reason=None):
         """Warn a member"""
         if member.top_role >= ctx.author.top_role:
-            await ctx.send("You cannot warn a member with higher or equal role!")
+            await ctx.send("nope.")
             return
 
         # Create embed for mod-logs

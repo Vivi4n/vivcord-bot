@@ -83,7 +83,7 @@ class AdminBot(commands.Bot):
         await self.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.watching,
-                name="for rule breakers"
+                name="you through ur walls"
             )
         )
     

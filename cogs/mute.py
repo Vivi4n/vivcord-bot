@@ -100,7 +100,7 @@ class Mute(commands.Cog):
                                         int(user_id),
                                         "unmute",
                                         {
-                                            "reason": "Temporary mute expired",
+                                            "reason": "Temp mute expired",
                                             "moderator": self.bot.user.id,
                                             "moderator_name": str(self.bot.user),
                                             "timestamp": str(current_time)
@@ -129,7 +129,7 @@ class Mute(commands.Cog):
         Duration format: 30m, 24h, 7d (optional, if not provided, mute is permanent)
         """
         if member.top_role >= ctx.author.top_role:
-            await ctx.send("You cannot mute a member with higher or equal role!")
+            await ctx.send("nope.")
             return
 
         if duration and not reason:
@@ -199,13 +199,13 @@ class Mute(commands.Cog):
         Usage: !unmute @user [reason]
         """
         if member.top_role >= ctx.author.top_role:
-            await ctx.send("You cannot unmute a member with higher or equal role!")
+            await ctx.send("nope.")
             return
             
         muted_role = discord.utils.get(ctx.guild.roles, name="Muted")
         
         if not muted_role:
-            await ctx.send("No Muted role found!")
+            await ctx.send("This fucker ain't muted.")
             return
             
         if muted_role not in member.roles:
@@ -215,7 +215,7 @@ class Mute(commands.Cog):
         try:    
             await member.remove_roles(muted_role, reason=reason)
         except discord.errors.Forbidden:
-            await ctx.send("I don't have permission to remove roles from this member.")
+            await ctx.send("can't, I'm sad now.")
             return
         
         # Create embed for mod-logs

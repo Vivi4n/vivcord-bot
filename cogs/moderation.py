@@ -50,7 +50,7 @@ class Moderation(commands.Cog):
                                 # Get the ban entry
                                 ban_entry = await guild.fetch_ban(discord.Object(id=int(user_id)))
                                 if ban_entry:
-                                    await guild.unban(ban_entry.user, reason="Temporary ban expired")
+                                    await guild.unban(ban_entry.user, reason="Temp ban expired")
                                     
                                     # Create log embed
                                     embed = discord.Embed(
@@ -206,7 +206,7 @@ class Moderation(commands.Cog):
     async def kick(self, ctx, member: discord.Member, *, reason=None):
         """Kick a member"""
         if member.top_role >= ctx.author.top_role:
-            await ctx.send("You cannot kick a member with higher or equal role!")
+            await ctx.send("nope.")
             return
 
         await member.kick(reason=reason)
