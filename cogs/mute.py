@@ -10,9 +10,9 @@ class Mute(commands.Cog):
         self.bot = bot
         self.db = Database('data/user_logs.json')
         self.temp_mutes = {}
-        self.load_active_mutes()  # This calls the method we're about to define
+        self.load_active_mutes()
 
-    def load_active_mutes(self):  # Add this method right here
+    def load_active_mutes(self):
         """Load active temporary mutes from the database"""
         try:
             for user_id, user_data in self.db.data.items():
@@ -27,15 +27,45 @@ class Mute(commands.Cog):
         except Exception as e:
             print(f"Error loading active mutes: {e}")
 
+    async def ensure_muted_role(self, guild):
+        """Ensure the Muted role exists and has proper permissions"""
+        muted_role = discord.utils.get(guild.roles, name="Muted")
+        if not muted_role:
+            # Create the role if it doesn't exist
+            try:
+                muted_role = await guild.create_role(
+                    name="Muted",
+                    reason="Created for muting members",
+                    color=discord.Color.dark_gray()
+                )
+
+                # Set up permissions for all existing channels
+                for channel in guild.channels:
+                    try:
+                        await channel.set_permissions(muted_role, 
+                            speak=False, 
+                            send_messages=False,
+                            add_reactions=False,
+                            stream=False
+                        )
+                    except discord.errors.Forbidden:
+                        continue
+
+            except discord.errors.Forbidden:
+                # If bot doesn't have permission to create roles
+                return None
+
+        return muted_role
+
     async def log_to_modchannel(self, guild, embed):
         """Send log message to mod-logs channel"""
         mod_channel = discord.utils.get(guild.channels, name='mod-logs')
         if mod_channel:
             await mod_channel.send(embed=embed)
-    
+
     async def check_temp_mutes(self):
         """Check and unmute users whose temporary mute has expired"""
-        await self.bot.wait_until_ready()  # Make sure bot is ready before starting loop
+        await self.bot.wait_until_ready()
         
         while not self.bot.is_closed():
             try:
@@ -76,7 +106,6 @@ class Mute(commands.Cog):
                                             "timestamp": str(current_time)
                                         }
                                     )
-                                    
                                     to_remove.append(user_id)
             
                 # Remove expired mutes
@@ -87,11 +116,11 @@ class Mute(commands.Cog):
                 print(f"Error in check_temp_mutes: {e}")
             
             await asyncio.sleep(60)  # Check every minute
-    
+
     async def cog_load(self):
         """This is called when the cog is loaded"""
         self.temp_mute_task = self.bot.loop.create_task(self.check_temp_mutes())
-    
+
     @commands.command()
     @commands.has_permissions(manage_roles=True)
     async def mute(self, ctx, member: discord.Member, duration: str = None, *, reason=None):
@@ -102,7 +131,7 @@ class Mute(commands.Cog):
         if member.top_role >= ctx.author.top_role:
             await ctx.send("You cannot mute a member with higher or equal role!")
             return
-            
+
         if duration and not reason:
             reason = duration
             duration = None
@@ -114,8 +143,17 @@ class Mute(commands.Cog):
         if duration_seconds:
             expires_at = datetime.utcnow() + timedelta(seconds=duration_seconds)
         
+        # Ensure muted role exists and has proper permissions
         muted_role = await self.ensure_muted_role(ctx.guild)
-        await member.add_roles(muted_role, reason=reason)
+        if not muted_role:
+            await ctx.send("Failed to create or find Muted role. Please check my permissions.")
+            return
+
+        try:
+            await member.add_roles(muted_role, reason=reason)
+        except discord.errors.Forbidden:
+            await ctx.send("I don't have permission to add roles to this member.")
+            return
         
         # Create embed for mod-logs
         embed = discord.Embed(
@@ -173,8 +211,12 @@ class Mute(commands.Cog):
         if muted_role not in member.roles:
             await ctx.send(f"{member.mention} is not muted!")
             return
-            
-        await member.remove_roles(muted_role, reason=reason)
+        
+        try:    
+            await member.remove_roles(muted_role, reason=reason)
+        except discord.errors.Forbidden:
+            await ctx.send("I don't have permission to remove roles from this member.")
+            return
         
         # Create embed for mod-logs
         embed = discord.Embed(
