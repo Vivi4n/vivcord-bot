@@ -5,15 +5,24 @@ from datetime import datetime
 class Database:
     def __init__(self, filename):
         self.filename = filename
+        # Create the directory if it doesn't exist
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
         self.data = self.load_data()
     
     def load_data(self):
-        if os.path.exists(self.filename):
-            with open(self.filename, 'r') as f:
-                return json.load(f)
+        try:
+            if os.path.exists(self.filename):
+                with open(self.filename, 'r') as f:
+                    return json.load(f)
+        except json.JSONDecodeError:
+            # If the file is empty or invalid, return an empty dict
+            pass
         return {}
     
     def save_data(self):
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(self.filename), exist_ok=True)
+        # Save with pretty printing
         with open(self.filename, 'w') as f:
             json.dump(self.data, f, indent=4)
     
