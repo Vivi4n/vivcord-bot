@@ -36,16 +36,15 @@ class Warnings(commands.Cog):
         # Send to mod-logs
         await self.log_to_modchannel(ctx.guild, embed)
         
-        self.db.log_action(
-            member.id,
-            "warning",
-            {
-                "reason": reason,
-                "moderator": ctx.author.id,
-                "moderator_name": str(ctx.author),
-                "timestamp": str(datetime.utcnow())
-            }
-        )
+        warning_data = {
+            "reason": reason,
+            "moderator": ctx.author.id,
+            "moderator_name": str(ctx.author),
+            "timestamp": str(datetime.utcnow())
+        }
+        
+        # Using "warnings" instead of "warning" for consistency
+        self.db.log_action(member.id, "warnings", warning_data)
         
         await ctx.send(f"{member.mention} has been warned. Reason: {reason or 'No reason provided'}")
 

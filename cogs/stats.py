@@ -75,23 +75,31 @@ class Stats(commands.Cog):
         )
         
         # Moderation Stats
+        warnings_count = len(user_data.get('warnings', []))
+        kicks_count = len(user_data.get('kicks', []))
+        bans_count = len(user_data.get('bans', []))
+        mutes_count = len(user_data.get('mutes', []))
+        
         embed.add_field(
             name="Moderation History",
-            value=f"Warnings: {len(user_data.get('warnings', []))}\n"
-                  f"Kicks: {len(user_data.get('kicks', []))}\n"
-                  f"Bans: {len(user_data.get('bans', []))}\n"
-                  f"Mutes: {len(user_data.get('mutes', []))}\n",
+            value=f"Warnings: {warnings_count}\n"
+                  f"Kicks: {kicks_count}\n"
+                  f"Bans: {bans_count}\n"
+                  f"Mutes: {mutes_count}",
             inline=False
         )
         
         # Recent Actions
         recent_actions = user_data.get('action_history', [])[-5:]  # Last 5 actions
         if recent_actions:
-            action_text = "\n".join(
-                f"{action['type'].title()}: {action['details'].get('reason', 'No reason')} "
-                f"({action['timestamp']})"
-                for action in recent_actions
-            )
+            action_text = []
+            for action in recent_actions:
+                action_type = action['type'].title()
+                details = action['details']
+                reason = details.get('reason', 'No reason')
+                timestamp = action['timestamp']
+                action_text.append(f"{action_type}: {reason} ({timestamp})")
+            action_text = "\n".join(action_text)
         else:
             action_text = "No recent actions"
             

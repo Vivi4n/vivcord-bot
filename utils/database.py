@@ -50,7 +50,7 @@ class Database:
         
         # Add to specific category array
         category_mapping = {
-            "warning": "warnings",
+            "warnings": "warnings",  # Changed from "warning" to "warnings"
             "kick": "kicks",
             "ban": "bans",
             "mute": "mutes"
@@ -58,15 +58,14 @@ class Database:
         
         if action_type in category_mapping:
             category = category_mapping[action_type]
-            if category not in user_data:
-                user_data[category] = []
-            user_data[category].append(details)
+            user_data[category].append(details.copy())  # Use copy to prevent reference issues
         
         # Add to general action history
-        user_data["action_history"].append({
+        action_entry = {
             "type": action_type,
-            "details": details,
+            "details": details.copy(),  # Use copy to prevent reference issues
             "timestamp": str(datetime.utcnow())
-        })
+        }
+        user_data["action_history"].append(action_entry)
         
         self.save_data()
