@@ -1,14 +1,12 @@
 from discord.ext import commands
 import discord
-from utils.database import Database
 from datetime import datetime, timedelta
 import os
-import json
 
 class Stats(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.db = bot.db  # Use bot's database instance
+        self.db = bot.db
         self.voice_time_tracker = {}
 
     @commands.Cog.listener()
@@ -91,7 +89,7 @@ class Stats(commands.Cog):
         )
         
         # Recent Actions
-        recent_actions = user_data.get('action_history', [])[-5:]  # Last 5 actions
+        recent_actions = user_data.get('action_history', [])[-5:]
         if recent_actions:
             action_text = []
             for action in recent_actions:
@@ -149,30 +147,6 @@ class Stats(commands.Cog):
         
         # Clean up file
         os.remove(filename)
-    
-    @commands.command()
-    @commands.has_permissions(administrator=True)
-    async def debug_stats(self, ctx, member: discord.Member):
-        """Debug command to show raw data"""
-        user_id = str(member.id)
-        self.db.debug_print_user(user_id)
-        
-        # Also load and show the data directly from file
-        try:
-            with open('data/user_logs.json', 'r') as f:
-                data = json.load(f)
-                if user_id in data:
-                    user_data = data[user_id]
-                    warnings = len(user_data.get('warnings', []))
-                    action_history = len(user_data.get('action_history', []))
-                    await ctx.send(f"Debug info for {member.name}:\n"
-                                 f"Warnings count: {warnings}\n"
-                                 f"Action history count: {action_history}\n"
-                                 f"Raw data has been printed to logs")
-                else:
-                    await ctx.send(f"No data found for {member.name}")
-        except Exception as e:
-            await ctx.send(f"Error reading data: {str(e)}")
 
 async def setup(bot):
     await bot.add_cog(Stats(bot))

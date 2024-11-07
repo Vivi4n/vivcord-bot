@@ -18,21 +18,14 @@ class Database:
                     return json.load(f)
         except json.JSONDecodeError:
             self.logger.error(f"Failed to parse {self.filename}")
-            # If the file is empty or invalid, return an empty dict
             pass
         return {}
     
     def save_data(self):
         try:
-            # Ensure directory exists
             os.makedirs(os.path.dirname(self.filename), exist_ok=True)
-            # Save with pretty printing
             with open(self.filename, 'w') as f:
                 json.dump(self.data, f, indent=4)
-            self.logger.info(f"Saved data to {self.filename}")
-            # Debug: Print the contents after saving
-            self.logger.info("Current data structure:")
-            self.logger.info(json.dumps(self.data, indent=2))
         except Exception as e:
             self.logger.error(f"Failed to save data: {str(e)}")
     
@@ -40,7 +33,6 @@ class Database:
         """Ensure user entry exists with all required fields"""
         user_id = str(user_id)
         if user_id not in self.data:
-            self.logger.info(f"Creating new user data for {user_id}")
             self.data[user_id] = {
                 "warnings": [],
                 "kicks": [],
@@ -57,13 +49,12 @@ class Database:
     
     def log_action(self, user_id, action_type, details):
         """Log an action with proper user data initialization"""
-        self.logger.info(f"Logging action {action_type} for user {user_id}")
         user_data = self.ensure_user_data(user_id)
         
         # Add to specific category array
         category_mapping = {
             "warnings": "warnings",
-            "warning": "warnings",  # Add both singular and plural
+            "warning": "warnings",
             "kick": "kicks",
             "ban": "bans",
             "mute": "mutes"
@@ -71,11 +62,9 @@ class Database:
         
         if action_type in category_mapping:
             category = category_mapping[action_type]
-            self.logger.info(f"Adding to category {category}")
             if category not in user_data:
                 user_data[category] = []
             user_data[category].append(details.copy())
-            self.logger.info(f"Current {category} count: {len(user_data[category])}")
         
         # Add to general action history
         action_entry = {
@@ -86,13 +75,3 @@ class Database:
         user_data["action_history"].append(action_entry)
         
         self.save_data()
-        self.logger.info(f"Action logged successfully for {user_id}")
-        
-    def debug_print_user(self, user_id):
-        """Debug method to print user data"""
-        user_id = str(user_id)
-        if user_id in self.data:
-            self.logger.info(f"Data for user {user_id}:")
-            self.logger.info(json.dumps(self.data[user_id], indent=2))
-        else:
-            self.logger.info(f"No data found for user {user_id}")
