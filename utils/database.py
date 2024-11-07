@@ -48,9 +48,18 @@ class Database:
         """Log an action with proper user data initialization"""
         user_data = self.ensure_user_data(user_id)
         
-        # Add to specific category if it exists
-        if action_type in ["warning", "kick", "ban", "mute"]:
-            category = f"{action_type}s"
+        # Add to specific category array
+        category_mapping = {
+            "warning": "warnings",
+            "kick": "kicks",
+            "ban": "bans",
+            "mute": "mutes"
+        }
+        
+        if action_type in category_mapping:
+            category = category_mapping[action_type]
+            if category not in user_data:
+                user_data[category] = []
             user_data[category].append(details)
         
         # Add to general action history
