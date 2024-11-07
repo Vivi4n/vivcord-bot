@@ -72,15 +72,19 @@ class AdminBot(commands.Bot):
             'moderation',
             'mute',
             'warnings',
-            'error_handler'
+            'error_handler',
+            'logger' # I FORGOR SKULLEMOJI
         ]
         
         for cog in cogs:
             try:
+                self.logger.info(f'Attempting to load cog: {cog}')
                 await self.load_extension(f'cogs.{cog}')
                 self.logger.info(f'Successfully loaded cog: {cog}')
             except Exception as e:
                 self.logger.error(f'Failed to load cog {cog}: {str(e)}')
+                import traceback
+                self.logger.error(traceback.format_exc())
     
     async def on_ready(self):
         """Called when the bot is ready and connected to Discord"""
