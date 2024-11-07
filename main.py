@@ -4,12 +4,11 @@ import os
 from dotenv import load_dotenv
 import asyncio
 import logging
-import traceback
 from datetime import datetime
 
-# Set up logging with more verbose output
+# Set up logging with less verbose output
 logging.basicConfig(
-    level=logging.DEBUG,  # Change to DEBUG level
+    level=logging.INFO,  # Change back to INFO level
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.FileHandler(filename='bot.log', encoding='utf-8', mode='a'),
@@ -22,13 +21,11 @@ load_dotenv()
 
 class AdminBot(commands.Bot):
     def __init__(self):
-        # Set up intents
         intents = discord.Intents.default()
         intents.members = True
         intents.message_content = True
         intents.guilds = True
         
-        # Initialize the bot
         super().__init__(
             command_prefix='!',
             intents=intents,
@@ -38,43 +35,31 @@ class AdminBot(commands.Bot):
             )
         )
         
-        # Store startup time
         self.start_time = datetime.utcnow()
         self.logger = logging.getLogger('AdminBot')
     
     async def setup_hook(self):
         """Setup hook that gets called before the bot starts"""
         try:
-            self.logger.debug("Starting setup hook...")
-            
             # Create necessary directories
-            directories = ['data', 'logs']
+            directories = ['data', 'logs', 'utils', 'cogs']
             for directory in directories:
                 os.makedirs(directory, exist_ok=True)
-                self.logger.debug(f"Created/verified directory: {directory}")
-            
-            # Ensure utils and cogs directories exist
-            os.makedirs('utils', exist_ok=True)
-            os.makedirs('cogs', exist_ok=True)
-            self.logger.debug("Created/verified utils and cogs directories")
             
             # Create __init__.py files if they don't exist
             open('utils/__init__.py', 'a').close()
             open('cogs/__init__.py', 'a').close()
-            self.logger.debug("Created/verified __init__.py files")
             
             # Load all cogs
             await self.load_cogs()
             
         except Exception as e:
             self.logger.error(f"Error in setup: {str(e)}")
-            self.logger.error(traceback.format_exc())
     
     async def load_cogs(self):
         """Load all cogs from the cogs directory"""
         self.logger.info("Loading cogs...")
         
-        # List of cogs to load
         cogs = [
             'moderation',
             'mute',
@@ -85,45 +70,43 @@ class AdminBot(commands.Bot):
         
         for cog in cogs:
             try:
-                self.logger.debug(f'Starting to load cog: {cog}')
-                self.logger.debug(f'Looking for cog at: cogs.{cog}')
-                
-                # Add these debug lines
-                import importlib
-                self.logger.debug(f'Attempting to import cogs.{cog}')
-                module = importlib.import_module(f'cogs.{cog}')
-                self.logger.debug(f'Successfully imported module: {module}')
-                
                 await self.load_extension(f'cogs.{cog}')
-                self.logger.info(f'Successfully loaded cog: {cog}')
-            except ImportError as e:
-                self.logger.error(f'Import error loading cog {cog}: {str(e)}')
-                self.logger.error(traceback.format_exc())
+                self.logger.info(f'Loaded: {cog}')
             except Exception as e:
-                self.logger.error(f'Failed to load cog {cog}: {str(e)}')
-                self.logger.error(traceback.format_exc())
+                self.logger.error(f'Failed to load {cog}: {str(e)}')
     
     async def on_ready(self):
         """Called when the bot is ready and connected to Discord"""
         self.logger.info(f'{self.user} has connected to Discord!')
         self.logger.info(f'Connected to {len(self.guilds)} guilds')
         
-        # Set bot status
         await self.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.watching,
-                name="for fat people"
+                name="for rule breakers"
             )
         )
+    
+    async def on_guild_join(self, guild):
+        """Called when the bot joins a new guild"""
+        self.logger.info(f'Joined new guild: {guild.name} (id: {guild.id})')
+        
+        try:
+            if not discord.utils.get(guild.channels, name='mod-logs'):
+                await guild.create_text_channel('mod-logs')
+        except discord.Forbidden:
+            self.logger.warning(f'Could not create mod-logs channel in {guild.name}')
+    
+    async def on_guild_remove(self, guild):
+        """Called when the bot is removed from a guild"""
+        self.logger.info(f'Removed from guild: {guild.name} (id: {guild.id})')
 
 async def main():
     try:
-        # Get the token from environment variables
         token = os.getenv('DISCORD_TOKEN')
         if not token:
             raise ValueError("No Discord token found in .env file")
         
-        # Create and run the bot
         bot = AdminBot()
         async with bot:
             await bot.start(token)
@@ -134,7 +117,6 @@ async def main():
         logging.error("Failed to login: Invalid Discord token")
     except Exception as e:
         logging.error(f"Fatal error: {str(e)}")
-        logging.error(traceback.format_exc())
 
 if __name__ == '__main__':
     try:
@@ -143,4 +125,3 @@ if __name__ == '__main__':
         logging.info("Bot shutting down...")
     except Exception as e:
         logging.error(f"Fatal error: {str(e)}")
-        logging.error(traceback.format_exc())
