@@ -79,16 +79,26 @@ class AdminBot(commands.Bot):
             'moderation',
             'mute',
             'warnings',
-            'error_handler',
-            'logger'
+            'error_handler'
+            # Temporarily remove 'logger' until we fix the current issues
         ]
         
         for cog in cogs:
             try:
                 self.logger.debug(f'Starting to load cog: {cog}')
                 self.logger.debug(f'Looking for cog at: cogs.{cog}')
+                
+                # Add these debug lines
+                import importlib
+                self.logger.debug(f'Attempting to import cogs.{cog}')
+                module = importlib.import_module(f'cogs.{cog}')
+                self.logger.debug(f'Successfully imported module: {module}')
+                
                 await self.load_extension(f'cogs.{cog}')
                 self.logger.info(f'Successfully loaded cog: {cog}')
+            except ImportError as e:
+                self.logger.error(f'Import error loading cog {cog}: {str(e)}')
+                self.logger.error(traceback.format_exc())
             except Exception as e:
                 self.logger.error(f'Failed to load cog {cog}: {str(e)}')
                 self.logger.error(traceback.format_exc())
