@@ -10,6 +10,18 @@ class Warnings(commands.Cog):
         self.db = Database('data/user_logs.json')
         self.logger = logging.getLogger('Warnings')
 
+    async def log_to_modchannel(self, guild, embed):
+        """Send log message to mod-logs channel"""
+        mod_channel = discord.utils.get(guild.channels, name='mod-logs')
+        if mod_channel:
+            try:
+                await mod_channel.send(embed=embed)
+                self.logger.info(f"Sent warning log to mod-logs channel")
+            except Exception as e:
+                self.logger.error(f"Failed to send to mod-logs channel: {str(e)}")
+        else:
+            self.logger.warning(f"No mod-logs channel found in guild {guild.id}")
+
     @commands.command()
     @commands.has_permissions(kick_members=True)
     async def warn(self, ctx, member: discord.Member, *, reason=None):
