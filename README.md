@@ -13,6 +13,10 @@ Make sure you insert DISCORD_TOKEN into .env. If you don't know how, follow the 
 ```
 DISCORD_TOKEN="YourDiscordBotToken"
 ```
+Run as normal as such --
+```
+python3 main.py / python main.py
+```
 
 # Moar
 Have fun, it's nothing special and it needs a lot more updates.
