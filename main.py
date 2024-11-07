@@ -71,29 +71,27 @@ class AdminBot(commands.Bot):
             self.logger.error(traceback.format_exc())
     
     async def load_cogs(self):
-        """Load all cogs from the cogs directory"""
+    """Load all cogs from the cogs directory"""
         self.logger.info("Loading cogs...")
-        
-        # List of cogs to load
+    
+    # List of cogs to load (removed 'logger' since it's a utility module)
         cogs = [
             'moderation',
             'mute',
             'warnings',
             'error_handler'
-            # Temporarily remove 'logger' until we fix the current issues
         ]
-        
+    
         for cog in cogs:
             try:
                 self.logger.debug(f'Starting to load cog: {cog}')
                 self.logger.debug(f'Looking for cog at: cogs.{cog}')
-                
-                # Add these debug lines
-                import importlib
+            
+                mport importlib
                 self.logger.debug(f'Attempting to import cogs.{cog}')
                 module = importlib.import_module(f'cogs.{cog}')
                 self.logger.debug(f'Successfully imported module: {module}')
-                
+            
                 await self.load_extension(f'cogs.{cog}')
                 self.logger.info(f'Successfully loaded cog: {cog}')
             except ImportError as e:
