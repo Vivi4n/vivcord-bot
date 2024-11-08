@@ -76,7 +76,8 @@ class AdminBot(commands.Bot):
             'warnings',
             'error_handler',
             'stats',
-            'anime_commands'
+            'anime_commands',
+            'custom_commands'
         ]
         
         for cog in cogs:

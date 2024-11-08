@@ -9,7 +9,8 @@ class AnimeCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger('AnimeCommands')
-        self.api_url = "https://api.waifu.pics/sfw/waifu"
+        self.waifu_api_url = "https://api.waifu.pics/sfw/waifu"
+        self.husbando_api_url = "https://api.waifu.pics/sfw/husbando"
         self.session = None
 
     async def cog_load(self):
@@ -19,16 +20,11 @@ class AnimeCommands(commands.Cog):
         if self.session:
             await self.session.close()
 
-    @app_commands.command(
-        name="waifu",
-        description="Get a random SFW anime character image"
-    )
-    @app_commands.checks.cooldown(1, 5.0)
-    async def waifu(self, interaction: discord.Interaction):
+    async def _fetch_anime_image(self, interaction: discord.Interaction, api_url: str, title: str):
         try:
             await interaction.response.defer()
 
-            async with self.session.get(self.api_url) as response:
+            async with self.session.get(api_url) as response:
                 if response.status == 200:
                     data = await response.json()
                     image_url = data.get('url')
@@ -40,7 +36,7 @@ class AnimeCommands(commands.Cog):
                         return
 
                     embed = discord.Embed(
-                        title="Random Anime Character",
+                        title=title,
                         color=discord.Color.purple(),
                         timestamp=datetime.utcnow()
                     )
@@ -59,20 +55,37 @@ class AnimeCommands(commands.Cog):
                 "Sorry, there was an error connecting to the anime image service."
             )
         except Exception as e:
-            self.logger.error(f"Unexpected error in waifu command: {str(e)}")
+            self.logger.error(f"Unexpected error in anime command: {str(e)}")
             await interaction.followup.send(
                 "An unexpected error occurred. Please try again later."
             )
 
+    @app_commands.command(
+        name="waifu",
+        description="Get a random SFW anime character image"
+    )
+    @app_commands.checks.cooldown(1, 5.0)
+    async def waifu(self, interaction: discord.Interaction):
+        await self._fetch_anime_image(interaction, self.waifu_api_url, "Random Anime Character")
+
+    @app_commands.command(
+        name="husbando",
+        description="Get a random SFW male anime character image"
+    )
+    @app_commands.checks.cooldown(1, 5.0)
+    async def husbando(self, interaction: discord.Interaction):
+        await self._fetch_anime_image(interaction, self.husbando_api_url, "Random Male Anime Character")
+
     @waifu.error
-    async def waifu_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
+    @husbando.error
+    async def anime_command_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         if isinstance(error, app_commands.CommandOnCooldown):
             await interaction.response.send_message(
                 f"Please wait {error.retry_after:.1f} seconds before using this command again!",
                 ephemeral=True
             )
         else:
-            self.logger.error(f"Unhandled error in waifu command: {str(error)}")
+            self.logger.error(f"Unhandled error in anime command: {str(error)}")
             await interaction.response.send_message(
                 "An error occurred while processing your request.",
                 ephemeral=True
@@ -98,6 +111,6 @@ async def setup(bot):
     
     try:
         synced = await bot.tree.sync()
-        print(f"Synced {len(synced)} command(s)")
+        print(f"Synced {len(synced)} command(s) globally")
     except Exception as e:
-        print(f"Failed to sync commands: {e}")
+        print(f"Failed to sync commands globally: {e}")
