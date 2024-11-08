@@ -66,6 +66,12 @@ class AnimeCommands(commands.Cog):
 
     @commands.command()
     @commands.cooldown(1, 5, commands.BucketType.user)
+    async def husbando(self, ctx):
+        """Get a random SFW anime husbando image"""
+        await self._fetch_anime_image(ctx, "husbando", "Random Husbando")
+
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def neko(self, ctx):
         """Get a random SFW neko image"""
         await self._fetch_anime_image(ctx, "neko", "Random Neko")
@@ -83,6 +89,7 @@ class AnimeCommands(commands.Cog):
         await self._fetch_anime_image(ctx, "pat", "Headpat!")
 
     @waifu.error
+    @husbando.error
     @neko.error
     @kitsune.error
     @pat.error
