@@ -3,15 +3,21 @@ import discord
 import json
 import os
 import logging
+from datetime import datetime
 
 class CustomCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger('CustomCommands')
-        # Ensure data directory exists
         os.makedirs('data', exist_ok=True)
         self.commands_file = 'data/custom_commands.json'
         self.commands = self.load_commands()
+
+    async def log_to_modchannel(self, guild, embed):
+        """Send log message to mod-logs channel"""
+        mod_channel = discord.utils.get(guild.channels, name='mod-logs')
+        if mod_channel:
+            await mod_channel.send(embed=embed)
 
     def load_commands(self):
         """Load custom commands from JSON file"""
@@ -63,6 +69,21 @@ class CustomCommands(commands.Cog):
         mention_info = " (requires user mention)" if requires_mention else ""
         await ctx.send(f"Added command `{command}` with role requirement {required_role}{mention_info}")
 
+        # Log to mod-logs
+        embed = discord.Embed(
+            title="Custom Command Added",
+            color=discord.Color.green(),
+            timestamp=datetime.utcnow()
+        )
+        embed.add_field(name="Command", value=f"!{command}", inline=False)
+        embed.add_field(name="Response", value=response, inline=False)
+        embed.add_field(name="Required Role", value="Everyone" if required_role == 0 else f"Role ID: {required_role}", inline=False)
+        embed.add_field(name="Added By", value=f"{ctx.author.mention} ({ctx.author.name})", inline=False)
+        if requires_mention:
+            embed.add_field(name="Note", value="This command requires a user mention", inline=False)
+        
+        await self.log_to_modchannel(ctx.guild, embed)
+
     @custom_commands.command(name='remove')
     @commands.has_permissions(manage_messages=True)
     async def remove_command(self, ctx, command: str):
@@ -70,9 +91,26 @@ class CustomCommands(commands.Cog):
         guild_id = str(ctx.guild.id)
         
         if guild_id in self.commands and command in self.commands[guild_id]:
+            # Store command data before removal for logging
+            cmd_data = self.commands[guild_id][command]
+            
+            # Remove command
             del self.commands[guild_id][command]
             self.save_commands()
             await ctx.send(f"Removed command `{command}`")
+
+            # Log to mod-logs
+            embed = discord.Embed(
+                title="Custom Command Removed",
+                color=discord.Color.red(),
+                timestamp=datetime.utcnow()
+            )
+            embed.add_field(name="Command", value=f"!{command}", inline=False)
+            embed.add_field(name="Response", value=cmd_data["response"], inline=False)
+            embed.add_field(name="Required Role", value="Everyone" if cmd_data["required_role"] == 0 else f"Role ID: {cmd_data['required_role']}", inline=False)
+            embed.add_field(name="Removed By", value=f"{ctx.author.mention} ({ctx.author.name})", inline=False)
+            
+            await self.log_to_modchannel(ctx.guild, embed)
         else:
             await ctx.send(f"Command `{command}` not found!")
 
