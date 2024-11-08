@@ -49,11 +49,6 @@ class AnimeCommands(commands.Cog):
                         "Sorry, there was an error accessing the anime image service."
                     )
 
-        except aiohttp.ClientError as e:
-            self.logger.error(f"API request failed: {str(e)}")
-            await interaction.followup.send(
-                "Sorry, there was an error connecting to the anime image service."
-            )
         except Exception as e:
             self.logger.error(f"Unexpected error in anime command: {str(e)}")
             await interaction.followup.send(
@@ -66,6 +61,7 @@ class AnimeCommands(commands.Cog):
     )
     @app_commands.checks.cooldown(1, 5.0)
     async def waifu(self, interaction: discord.Interaction):
+        """Get a random waifu image"""
         await self._fetch_anime_image(interaction, self.waifu_api_url, "Random Anime Character")
 
     @app_commands.command(
@@ -74,6 +70,7 @@ class AnimeCommands(commands.Cog):
     )
     @app_commands.checks.cooldown(1, 5.0)
     async def husbando(self, interaction: discord.Interaction):
+        """Get a random husbando image"""
         await self._fetch_anime_image(interaction, self.husbando_api_url, "Random Male Anime Character")
 
     @waifu.error
@@ -92,25 +89,4 @@ class AnimeCommands(commands.Cog):
             )
 
 async def setup(bot):
-    try:
-        import aiohttp
-    except ImportError:
-        import subprocess
-        subprocess.check_call(["pip", "install", "aiohttp"])
-    
-    anime_cog = AnimeCommands(bot)
-    await bot.add_cog(anime_cog)
-    
-    if bot.guilds:
-        for guild in bot.guilds:
-            try:
-                await bot.tree.sync(guild=guild)
-                print(f"Synced commands to guild: {guild.name}")
-            except Exception as e:
-                print(f"Failed to sync commands to {guild.name}: {e}")
-    
-    try:
-        synced = await bot.tree.sync()
-        print(f"Synced {len(synced)} command(s) globally")
-    except Exception as e:
-        print(f"Failed to sync commands globally: {e}")
+    await bot.add_cog(AnimeCommands(bot))
