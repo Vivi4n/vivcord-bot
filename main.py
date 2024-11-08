@@ -88,63 +88,64 @@ class AdminBot(commands.Bot):
                 self.logger.error(f'Failed to load {cog}: {str(e)}')
 
     @commands.command()
-    @commands.is_owner()
+    @commands.has_permissions(administrator=True)
     async def clearcommands(self, ctx):
         """Remove all slash commands"""
-        await ctx.send("Clearing all slash commands...")
-        self.tree.clear_commands(guild=None)
-        await self.tree.sync()
-        await ctx.send("Cleared all slash commands.")
+        try:
+            await ctx.send("Clearing all slash commands...")
+            self.tree.clear_commands(guild=ctx.guild)  # Clear for current guild only
+            await self.tree.sync(guild=ctx.guild)
+            await ctx.send("Cleared all slash commands for this server.")
+        except Exception as e:
+            await ctx.send(f"Error clearing commands: {str(e)}")
+            self.logger.error(f"Error in clearcommands: {str(e)}")
 
     @commands.command()
-    @commands.is_owner()
+    @commands.has_permissions(administrator=True)
     async def reloadall(self, ctx):
         """Reload all cogs and sync commands"""
-        await ctx.send("Reloading all cogs...")
-        # Reload all cogs
-        for cog in list(self.cogs):
-            try:
-                await self.reload_extension(f'cogs.{cog.lower()}')
-                await ctx.send(f"Reloaded: {cog}")
-            except Exception as e:
-                await ctx.send(f"Failed to reload {cog}: {str(e)}")
-                return
+        try:
+            await ctx.send("Reloading all cogs...")
+            # Reload all cogs
+            for cog in list(self.cogs):
+                try:
+                    await self.reload_extension(f'cogs.{cog.lower()}')
+                    await ctx.send(f"Reloaded: {cog}")
+                except Exception as e:
+                    await ctx.send(f"Failed to reload {cog}: {str(e)}")
+                    return
 
-        # Sync commands
-        await ctx.send("Syncing commands...")
-        await self.tree.sync()
-        await ctx.send("All cogs reloaded and commands synced!")
+            # Sync commands for this guild
+            await ctx.send("Syncing commands...")
+            await self.tree.sync(guild=ctx.guild)
+            await ctx.send("All cogs reloaded and commands synced!")
+            
+        except Exception as e:
+            await ctx.send(f"Error reloading cogs: {str(e)}")
+            self.logger.error(f"Error in reloadall: {str(e)}")
 
     @commands.command()
-    @commands.is_owner()
-    async def sync(self, ctx, scope: str = "global"):
+    @commands.has_permissions(administrator=True)
+    async def sync(self, ctx):
+        """Sync slash commands for this server"""
         try:
-            if scope == "guild":
-                synced = await self.tree.sync(guild=ctx.guild)
-                await ctx.send(
-                    f"Successfully synced {len(synced)} commands to the current guild."
-                )
-                self.logger.info(
-                    f"Synced {len(synced)} commands to guild {ctx.guild.name}"
-                )
-                
-            else:
-                synced = await self.tree.sync()
-                await ctx.send(
-                    f"Successfully synced {len(synced)} commands globally."
-                )
-                self.logger.info(f"Synced {len(synced)} commands globally")
-                
+            await ctx.send("Syncing commands...")
+            synced = await self.tree.sync(guild=ctx.guild)
+            await ctx.send(f"Successfully synced {len(synced)} commands to this server.")
+            self.logger.info(f"Synced {len(synced)} commands to guild {ctx.guild.name}")
         except Exception as e:
             await ctx.send(f"Failed to sync commands: {str(e)}")
             self.logger.error(f"Sync error: {str(e)}")
 
     @commands.command()
-    @commands.is_owner()
+    @commands.has_permissions(administrator=True)
     async def reload(self, ctx, cog: str):
+        """Reload a specific cog"""
         try:
             await self.reload_extension(f'cogs.{cog}')
             await ctx.send(f"Successfully reloaded {cog}")
+            # Sync commands after reload
+            await self.tree.sync(guild=ctx.guild)
             self.logger.info(f"Reloaded cog: {cog}")
         except Exception as e:
             await ctx.send(f"Failed to reload {cog}: {str(e)}")
@@ -176,6 +177,16 @@ class AdminBot(commands.Bot):
     
     async def on_guild_remove(self, guild):
         self.logger.info(f'Removed from guild: {guild.name} (id: {guild.id})')
+
+    @clearcommands.error
+    @reloadall.error
+    @sync.error
+    @reload.error
+    async def admin_command_error(self, ctx, error):
+        if isinstance(error, commands.MissingPermissions):
+            await ctx.send("You need administrator permissions to use this command.")
+        else:
+            await ctx.send(f"An error occurred: {str(error)}")
 
 async def main():
     try:
