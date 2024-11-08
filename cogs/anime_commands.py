@@ -8,8 +8,7 @@ class AnimeCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger('AnimeCommands')
-        self.waifu_api_url = "https://api.waifu.pics/sfw/waifu"
-        self.husbando_api_url = "https://api.waifu.pics/sfw/husbando"
+        self.base_api_url = "https://nekos.best/api/v2/"
         self.session = None
 
     async def cog_load(self):
@@ -19,12 +18,19 @@ class AnimeCommands(commands.Cog):
         if self.session:
             await self.session.close()
 
-    async def _fetch_anime_image(self, ctx, api_url: str, title: str):
+    async def _fetch_anime_image(self, ctx, endpoint: str, title: str):
         try:
-            async with self.session.get(api_url) as response:
+            async with self.session.get(f"{self.base_api_url}{endpoint}") as response:
                 if response.status == 200:
                     data = await response.json()
-                    image_url = data.get('url')
+                    results = data.get('results', [])
+                    if not results:
+                        await ctx.send("Sorry, couldn't find an image right now. Try again later!")
+                        return
+
+                    image_data = results[0]
+                    image_url = image_data.get('url')
+                    artist = image_data.get('artist_name')
 
                     if not image_url:
                         await ctx.send("Sorry, couldn't find an image right now. Try again later!")
@@ -36,7 +42,10 @@ class AnimeCommands(commands.Cog):
                         timestamp=datetime.utcnow()
                     )
                     embed.set_image(url=image_url)
-                    embed.set_footer(text="Powered by waifu.pics | SFW Content Only")
+                    if artist:
+                        embed.set_footer(text=f"Artist: {artist} | Powered by nekos.best")
+                    else:
+                        embed.set_footer(text="Powered by nekos.best")
 
                     await ctx.send(embed=embed)
                 else:
@@ -52,17 +61,31 @@ class AnimeCommands(commands.Cog):
     @commands.command()
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def waifu(self, ctx):
-        """Get a random SFW anime character image"""
-        await self._fetch_anime_image(ctx, self.waifu_api_url, "Random Anime Character")
+        """Get a random SFW anime waifu image"""
+        await self._fetch_anime_image(ctx, "waifu", "Random Waifu")
 
     @commands.command()
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def husbando(self, ctx):
-        """Get a random SFW male anime character image"""
-        await self._fetch_anime_image(ctx, self.husbando_api_url, "Random Male Anime Character")
+    async def neko(self, ctx):
+        """Get a random SFW neko image"""
+        await self._fetch_anime_image(ctx, "neko", "Random Neko")
+    
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def kitsune(self, ctx):
+        """Get a random SFW kitsune image"""
+        await self._fetch_anime_image(ctx, "kitsune", "Random Kitsune")
+    
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def pat(self, ctx):
+        """Get a random anime patting gif"""
+        await self._fetch_anime_image(ctx, "pat", "Headpat!")
 
     @waifu.error
-    @husbando.error
+    @neko.error
+    @kitsune.error
+    @pat.error
     async def anime_command_error(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
             await ctx.send(
