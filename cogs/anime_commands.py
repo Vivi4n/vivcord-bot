@@ -5,14 +5,13 @@ import aiohttp
 import logging
 from datetime import datetime
 
-class AnimeCommands(commands.GroupCog, name="anime"):
+class AnimeCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger('AnimeCommands')
         self.waifu_api_url = "https://api.waifu.pics/sfw/waifu"
         self.husbando_api_url = "https://api.waifu.pics/sfw/husbando"
         self.session = None
-        super().__init__()
 
     async def cog_load(self):
         self.session = aiohttp.ClientSession()
@@ -56,36 +55,25 @@ class AnimeCommands(commands.GroupCog, name="anime"):
                 "An unexpected error occurred. Please try again later."
             )
 
-    @app_commands.command(
+    waifu = app_commands.command(
         name="waifu",
         description="Get a random SFW anime character image"
-    )
-    async def waifu(self, interaction: discord.Interaction):
-        """Get a random waifu image"""
-        await self._fetch_anime_image(interaction, self.waifu_api_url, "Random Anime Character")
+    )(waifu)
 
-    @app_commands.command(
+    husbando = app_commands.command(
         name="husbando",
         description="Get a random SFW male anime character image"
-    )
-    async def husbando(self, interaction: discord.Interaction):
-        """Get a random husbando image"""
-        await self._fetch_anime_image(interaction, self.husbando_api_url, "Random Male Anime Character")
-
-    @waifu.error
-    @husbando.error
-    async def anime_command_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
-        if isinstance(error, app_commands.CommandOnCooldown):
-            await interaction.response.send_message(
-                f"Please wait {error.retry_after:.1f} seconds before using this command again!",
-                ephemeral=True
-            )
-        else:
-            self.logger.error(f"Unhandled error in anime command: {str(error)}")
-            await interaction.response.send_message(
-                "An error occurred while processing your request.",
-                ephemeral=True
-            )
+    )(husbando)
 
 async def setup(bot):
+    # First, remove any existing commands
+    bot.tree.clear_commands(guild=None)
+    await bot.tree.sync()
+    
+    # Now add our cog
     await bot.add_cog(AnimeCommands(bot))
+    
+    # Sync the new commands
+    await bot.tree.sync()
+    
+    print("Anime commands have been registered!")

@@ -89,6 +89,34 @@ class AdminBot(commands.Bot):
 
     @commands.command()
     @commands.is_owner()
+    async def clearcommands(self, ctx):
+        """Remove all slash commands"""
+        await ctx.send("Clearing all slash commands...")
+        self.tree.clear_commands(guild=None)
+        await self.tree.sync()
+        await ctx.send("Cleared all slash commands.")
+
+    @commands.command()
+    @commands.is_owner()
+    async def reloadall(self, ctx):
+        """Reload all cogs and sync commands"""
+        await ctx.send("Reloading all cogs...")
+        # Reload all cogs
+        for cog in list(self.cogs):
+            try:
+                await self.reload_extension(f'cogs.{cog.lower()}')
+                await ctx.send(f"Reloaded: {cog}")
+            except Exception as e:
+                await ctx.send(f"Failed to reload {cog}: {str(e)}")
+                return
+
+        # Sync commands
+        await ctx.send("Syncing commands...")
+        await self.tree.sync()
+        await ctx.send("All cogs reloaded and commands synced!")
+
+    @commands.command()
+    @commands.is_owner()
     async def sync(self, ctx, scope: str = "global"):
         try:
             if scope == "guild":
