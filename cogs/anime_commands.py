@@ -5,13 +5,14 @@ import aiohttp
 import logging
 from datetime import datetime
 
-class AnimeCommands(commands.Cog):
+class AnimeCommands(commands.GroupCog, name="anime"):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger('AnimeCommands')
         self.waifu_api_url = "https://api.waifu.pics/sfw/waifu"
         self.husbando_api_url = "https://api.waifu.pics/sfw/husbando"
         self.session = None
+        super().__init__()
 
     async def cog_load(self):
         self.session = aiohttp.ClientSession()
@@ -59,7 +60,6 @@ class AnimeCommands(commands.Cog):
         name="waifu",
         description="Get a random SFW anime character image"
     )
-    @app_commands.checks.cooldown(1, 5.0)
     async def waifu(self, interaction: discord.Interaction):
         """Get a random waifu image"""
         await self._fetch_anime_image(interaction, self.waifu_api_url, "Random Anime Character")
@@ -68,7 +68,6 @@ class AnimeCommands(commands.Cog):
         name="husbando",
         description="Get a random SFW male anime character image"
     )
-    @app_commands.checks.cooldown(1, 5.0)
     async def husbando(self, interaction: discord.Interaction):
         """Get a random husbando image"""
         await self._fetch_anime_image(interaction, self.husbando_api_url, "Random Male Anime Character")
