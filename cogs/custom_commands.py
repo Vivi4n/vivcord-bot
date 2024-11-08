@@ -2,31 +2,31 @@ from discord.ext import commands
 import discord
 import json
 import os
-import re
-from typing import Optional
 import logging
 
 class CustomCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger('CustomCommands')
+        # Ensure data directory exists
+        os.makedirs('data', exist_ok=True)
         self.commands_file = 'data/custom_commands.json'
         self.commands = self.load_commands()
 
     def load_commands(self):
         """Load custom commands from JSON file"""
+        if not os.path.exists(self.commands_file):
+            return {}
         try:
-            if os.path.exists(self.commands_file):
-                with open(self.commands_file, 'r') as f:
-                    return json.load(f)
+            with open(self.commands_file, 'r') as f:
+                return json.load(f)
         except Exception as e:
             self.logger.error(f"Failed to load custom commands: {e}")
-        return {}
+            return {}
 
     def save_commands(self):
         """Save custom commands to JSON file"""
         try:
-            os.makedirs(os.path.dirname(self.commands_file), exist_ok=True)
             with open(self.commands_file, 'w') as f:
                 json.dump(self.commands, f, indent=4)
         except Exception as e:
@@ -35,7 +35,8 @@ class CustomCommands(commands.Cog):
     @commands.group(name='cc', invoke_without_command=True)
     async def custom_commands(self, ctx):
         """Custom commands management"""
-        await ctx.send("Available subcommands: add, remove, list")
+        if ctx.invoked_subcommand is None:
+            await ctx.send("Available subcommands: add, remove, list")
 
     @custom_commands.command(name='add')
     @commands.has_permissions(manage_messages=True)
@@ -46,12 +47,10 @@ class CustomCommands(commands.Cog):
         if guild_id not in self.commands:
             self.commands[guild_id] = {}
         
-        # Check if command already exists
         if command in self.commands[guild_id]:
             await ctx.send(f"Command `{command}` already exists!")
             return
 
-        # Check if command requires mention
         requires_mention = "{mention}" in response
 
         self.commands[guild_id][command] = {
@@ -94,7 +93,7 @@ class CustomCommands(commands.Cog):
 
         for cmd, data in self.commands[guild_id].items():
             role_req = "Everyone" if data["required_role"] == 0 else f"Role ID: {data['required_role']}"
-            mention_req = " (requires mention)" if data["requires_mention"] else ""
+            mention_req = " (requires mention)" if data.get("requires_mention", False) else ""
             embed.add_field(
                 name=f"!{cmd}",
                 value=f"Required Role: {role_req}{mention_req}\nResponse: {data['response']}",
@@ -122,18 +121,16 @@ class CustomCommands(commands.Cog):
 
         # Check role permission
         if required_role != 0 and not any(role.id == required_role for role in message.author.roles):
-            await message.channel.send("Can't use that. Continued abuse will result in your demise.")
+            await message.channel.send("You don't have permission to use this command!")
             return
 
         response = cmd_data["response"]
         
         # Handle mention if command requires it
-        if cmd_data["requires_mention"]:
-            # Check for replied message
+        if cmd_data.get("requires_mention", False):
             target_user = None
             if message.reference and message.reference.resolved:
                 target_user = message.reference.resolved.author
-            # Check for mentions
             elif message.mentions:
                 target_user = message.mentions[0]
             
