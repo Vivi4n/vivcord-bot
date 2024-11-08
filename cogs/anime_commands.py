@@ -10,7 +10,7 @@ class AnimeCommands(commands.Cog):
         self.bot = bot
         self.logger = logging.getLogger('AnimeCommands')
         self.waifu_api_url = "https://api.waifu.pics/sfw/waifu"
-        self.husbando_api_url = "https://api.waifu.pics/sfw/husbando"
+        self.husbando_api_url = "https://nekos.best/api/v2/husbando"
         self.session = None
 
     async def cog_load(self):
@@ -22,12 +22,12 @@ class AnimeCommands(commands.Cog):
         if self.session:
             await self.session.close()
 
-    async def _fetch_anime_image(self, interaction: discord.Interaction, api_url: str, title: str):
-        """Helper method to fetch anime images from API"""
+    async def _fetch_waifu_image(self, interaction: discord.Interaction):
+        """Helper method to fetch waifu images from waifu.pics API"""
         try:
             await interaction.response.defer()
 
-            async with self.session.get(api_url) as response:
+            async with self.session.get(self.waifu_api_url) as response:
                 if response.status == 200:
                     data = await response.json()
                     image_url = data.get('url')
@@ -39,7 +39,7 @@ class AnimeCommands(commands.Cog):
                         return
 
                     embed = discord.Embed(
-                        title=title,
+                        title="Random Anime Character",
                         color=discord.Color.purple(),
                         timestamp=datetime.utcnow()
                     )
@@ -58,7 +58,53 @@ class AnimeCommands(commands.Cog):
                 "Sorry, there was an error connecting to the anime image service."
             )
         except Exception as e:
-            self.logger.error(f"Unexpected error in anime command: {str(e)}")
+            self.logger.error(f"Unexpected error in waifu command: {str(e)}")
+            await interaction.followup.send(
+                "An unexpected error occurred. Please try again later."
+            )
+
+    async def _fetch_husbando_image(self, interaction: discord.Interaction):
+        """Helper method to fetch husbando images from nekos.best API"""
+        try:
+            await interaction.response.defer()
+
+            async with self.session.get(self.husbando_api_url) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    # Nekos.best API returns results in a different format
+                    image_url = data.get('results', [{}])[0].get('url')
+                    artist_name = data.get('results', [{}])[0].get('artist_name')
+
+                    if not image_url:
+                        await interaction.followup.send(
+                            "Sorry, couldn't find an image right now. Try again later!"
+                        )
+                        return
+
+                    embed = discord.Embed(
+                        title="Random Male Anime Character",
+                        color=discord.Color.purple(),
+                        timestamp=datetime.utcnow()
+                    )
+                    embed.set_image(url=image_url)
+                    footer_text = "Powered by nekos.best | SFW Content Only"
+                    if artist_name:
+                        footer_text = f"Art by {artist_name} | " + footer_text
+                    embed.set_footer(text=footer_text)
+
+                    await interaction.followup.send(embed=embed)
+                else:
+                    await interaction.followup.send(
+                        "Sorry, there was an error accessing the anime image service."
+                    )
+
+        except aiohttp.ClientError as e:
+            self.logger.error(f"API request failed: {str(e)}")
+            await interaction.followup.send(
+                "Sorry, there was an error connecting to the anime image service."
+            )
+        except Exception as e:
+            self.logger.error(f"Unexpected error in husbando command: {str(e)}")
             await interaction.followup.send(
                 "An unexpected error occurred. Please try again later."
             )
@@ -70,7 +116,7 @@ class AnimeCommands(commands.Cog):
     @app_commands.checks.cooldown(1, 5.0)  # 1 use per 5 seconds per user
     async def waifu(self, interaction: discord.Interaction):
         """Get a random SFW anime character image"""
-        await self._fetch_anime_image(interaction, self.waifu_api_url, "Random Anime Character")
+        await self._fetch_waifu_image(interaction)
 
     @app_commands.command(
         name="husbando",
@@ -79,7 +125,7 @@ class AnimeCommands(commands.Cog):
     @app_commands.checks.cooldown(1, 5.0)  # 1 use per 5 seconds per user
     async def husbando(self, interaction: discord.Interaction):
         """Get a random SFW male anime character image"""
-        await self._fetch_anime_image(interaction, self.husbando_api_url, "Random Male Anime Character")
+        await self._fetch_husbando_image(interaction)
 
     @waifu.error
     @husbando.error
