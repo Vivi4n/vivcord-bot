@@ -5,9 +5,8 @@ from dotenv import load_dotenv
 import asyncio
 import logging
 from datetime import datetime
-from utils.database import Database  # Add this import
+from utils.database import Database
 
-# Set up logging with less verbose output
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -17,7 +16,6 @@ logging.basicConfig(
     ]
 )
 
-# Load environment variables
 load_dotenv()
 
 class AdminBot(commands.Bot):
@@ -41,28 +39,35 @@ class AdminBot(commands.Bot):
         self.db = Database('data/user_logs.json')
     
     async def setup_hook(self):
-        """Setup hook that gets called before the bot starts"""
         try:
-            # Create necessary directories
             directories = ['data', 'logs', 'utils', 'cogs']
             for directory in directories:
                 os.makedirs(directory, exist_ok=True)
             
-            # Create __init__.py files if they don't exist
             open('utils/__init__.py', 'a').close()
             open('cogs/__init__.py', 'a').close()
             
-            # Load all cogs
             await self.load_cogs()
             
-            # Sync slash commands
-            await self.tree.sync()
+            try:
+                self.logger.info("Syncing slash commands...")
+                await self.tree.sync()
+                self.logger.info("Global slash commands synced successfully")
+                
+                for guild in self.guilds:
+                    try:
+                        await self.tree.sync(guild=guild)
+                        self.logger.info(f"Slash commands synced to guild: {guild.name}")
+                    except Exception as e:
+                        self.logger.error(f"Failed to sync commands to {guild.name}: {e}")
+                        
+            except Exception as e:
+                self.logger.error(f"Failed to sync slash commands: {e}")
             
         except Exception as e:
             self.logger.error(f"Error in setup: {str(e)}")
     
     async def load_cogs(self):
-        """Load all cogs from the cogs directory"""
         self.logger.info("Loading cogs...")
         
         cogs = [
@@ -71,8 +76,7 @@ class AdminBot(commands.Bot):
             'warnings',
             'error_handler',
             'stats',
-            'anime_commands',
-            'custom_commands'
+            'anime_commands'
         ]
         
         for cog in cogs:
@@ -81,9 +85,43 @@ class AdminBot(commands.Bot):
                 self.logger.info(f'Loaded: {cog}')
             except Exception as e:
                 self.logger.error(f'Failed to load {cog}: {str(e)}')
+
+    @commands.command()
+    @commands.is_owner()
+    async def sync(self, ctx, scope: str = "global"):
+        try:
+            if scope == "guild":
+                synced = await self.tree.sync(guild=ctx.guild)
+                await ctx.send(
+                    f"Successfully synced {len(synced)} commands to the current guild."
+                )
+                self.logger.info(
+                    f"Synced {len(synced)} commands to guild {ctx.guild.name}"
+                )
+                
+            else:
+                synced = await self.tree.sync()
+                await ctx.send(
+                    f"Successfully synced {len(synced)} commands globally."
+                )
+                self.logger.info(f"Synced {len(synced)} commands globally")
+                
+        except Exception as e:
+            await ctx.send(f"Failed to sync commands: {str(e)}")
+            self.logger.error(f"Sync error: {str(e)}")
+
+    @commands.command()
+    @commands.is_owner()
+    async def reload(self, ctx, cog: str):
+        try:
+            await self.reload_extension(f'cogs.{cog}')
+            await ctx.send(f"Successfully reloaded {cog}")
+            self.logger.info(f"Reloaded cog: {cog}")
+        except Exception as e:
+            await ctx.send(f"Failed to reload {cog}: {str(e)}")
+            self.logger.error(f"Failed to reload {cog}: {str(e)}")
     
     async def on_ready(self):
-        """Called when the bot is ready and connected to Discord"""
         self.logger.info(f'{self.user} has connected to Discord!')
         self.logger.info(f'Connected to {len(self.guilds)} guilds')
         
@@ -95,17 +133,19 @@ class AdminBot(commands.Bot):
         )
     
     async def on_guild_join(self, guild):
-        """Called when the bot joins a new guild"""
         self.logger.info(f'Joined new guild: {guild.name} (id: {guild.id})')
         
         try:
             if not discord.utils.get(guild.channels, name='mod-logs'):
                 await guild.create_text_channel('mod-logs')
+            
+            await self.tree.sync(guild=guild)
+            self.logger.info(f"Synced slash commands to new guild: {guild.name}")
+            
         except discord.Forbidden:
             self.logger.warning(f'Could not create mod-logs channel in {guild.name}')
     
     async def on_guild_remove(self, guild):
-        """Called when the bot is removed from a guild"""
         self.logger.info(f'Removed from guild: {guild.name} (id: {guild.id})')
 
 async def main():
