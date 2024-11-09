@@ -4,6 +4,7 @@ import aiohttp
 import logging
 from datetime import datetime
 from typing import Optional, Dict, ClassVar
+from functools import partial
 
 class AnimeCommands(commands.Cog):
     """A cog for anime-related commands using the nekos.best API"""
@@ -39,6 +40,23 @@ class AnimeCommands(commands.Cog):
         self.bot = bot
         self.logger = logging.getLogger('AnimeCommands')
         self.session: Optional[aiohttp.ClientSession] = None
+        self._setup_interaction_commands()
+
+    def _setup_interaction_commands(self):
+        """Set up interaction commands dynamically"""
+        for cmd_name in self.INTERACTION_DESCRIPTIONS:
+            # Create the interaction command
+            @commands.command(name=cmd_name)
+            @commands.cooldown(1, 5, commands.BucketType.user)
+            async def interaction_cmd(self, ctx, member: discord.Member = None, cmd_name=cmd_name):
+                await self._fetch_anime_image(ctx, cmd_name, cmd_name.title() + "!", member)
+
+            # Set the command's help text
+            interaction_cmd.help = f"Send a {cmd_name} interaction to someone!"
+            
+            # Add the command to the cog
+            interaction_cmd = commands.command(name=cmd_name)(interaction_cmd)
+            setattr(self.__class__, cmd_name, interaction_cmd)
 
     async def cog_load(self):
         """Initialize aiohttp session when cog loads"""
@@ -140,21 +158,6 @@ class AnimeCommands(commands.Cog):
     async def kitsune(self, ctx):
         """Get a random SFW kitsune image"""
         await self._fetch_anime_image(ctx, "kitsune", "Random Kitsune")
-
-    # Dynamically create all interaction commands
-    for cmd_name, description in INTERACTION_DESCRIPTIONS.items():
-        @commands.command(name=cmd_name)
-        @commands.cooldown(1, 5, commands.BucketType.user)
-        async def interaction_cmd(self, ctx, member: discord.Member = None, cmd_name=cmd_name):
-            """Dynamic interaction command"""
-            await self._fetch_anime_image(
-                ctx, 
-                cmd_name, 
-                cmd_name.title() + "!", 
-                member
-            )
-        
-        locals()[cmd_name] = interaction_cmd
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
