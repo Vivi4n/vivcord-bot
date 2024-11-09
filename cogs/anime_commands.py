@@ -150,7 +150,7 @@ class AnimeCommands(commands.Cog):
                     title=title,
                     image_url=image_url,
                     artist=image_data.get('artist_name'),
-                    interaction_msg=interaction_msg
+                    interaction_msg=interaction_msg,
                     member=target_member
                 )
                 
