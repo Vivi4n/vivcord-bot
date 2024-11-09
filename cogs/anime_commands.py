@@ -51,7 +51,28 @@ class AnimeCommands(commands.Cog):
         "cuddle": "{author} cuddles with {target}",
         "thumbsup": "{author} gives {target} a thumbs up",
         "stare": "{author} stares at {target}",
-        "think": "{author} thinks about {target}"
+        "think": "{author} thinks about {target}",
+        # Added new interaction descriptions
+        "handhold": "{author} holds hands with {target}",
+        "handshake": "{author} shakes hands with {target}",
+        "punt": "{author} kicks {target}",
+        "lurk": "{author} lurks at {target}",
+        "nod": "{author} nods at {target}",
+        "nom": "{author} noms on {target}",
+        "nope": "{author} says nope to {target}",
+        "peck": "{author} pecks {target}",
+        "pout": "{author} pouts at {target}",
+        "punch": "{author} punches {target}",
+        "shoot": "{author} shoots at {target}",
+        "shrug": "{author} shrugs at {target}",
+        "slap": "{author} slaps {target}",
+        "sleep": "{author} falls asleep on {target}",
+        "smile": "{author} smiles at {target}",
+        "smug": "{author} gives {target} a smug look",
+        "tickle": "{author} tickles {target}",
+        "wink": "{author} winks at {target}",
+        "yawn": "{author} yawns at {target}",
+        "yeet": "{author} yeets {target}"
     }
 
     def __init__(self, bot):
@@ -217,7 +238,8 @@ class AnimeCommands(commands.Cog):
     async def handshake(self, ctx, member: discord.Member = None): pass
 
     @anime_command(name="punt", title="Kick!", help_text="Kick someone!")
-    async def kick(self, ctx, member: discord.Member = None): pass
+    async def punt(self, ctx, member: discord.Member = None):
+         await self._fetch_anime_image(ctx, "kick", "Punt!", member)
 
     @anime_command(name="lurk", title="*lurking*", help_text="Lurk at someone!")
     async def lurk(self, ctx, member: discord.Member = None): pass
