@@ -55,7 +55,7 @@ class AnimeCommands(commands.Cog):
         # Added new interaction descriptions
         "handhold": "{author} holds hands with {target}",
         "handshake": "{author} shakes hands with {target}",
-        "punt": "{author} kicks {target}",
+        #"kick": "{author} kicks {target}",
         "lurk": "{author} lurks at {target}",
         "nod": "{author} nods at {target}",
         "nom": "{author} noms on {target}",
@@ -237,9 +237,8 @@ class AnimeCommands(commands.Cog):
     @anime_command(name="handshake", title="Handshake!", help_text="Shake hands with someone!")
     async def handshake(self, ctx, member: discord.Member = None): pass
 
-    @anime_command(name="punt", title="Kick!", help_text="Kick someone!")
-    async def punt(self, ctx, member: discord.Member = None):
-         await self._fetch_anime_image(ctx, "kick", "Punt!", member)
+    #@anime_command(name="kick", title="Kick!", help_text="Kick someone!")
+    #async def kick(self, ctx, member: discord.Member = None): pass
 
     @anime_command(name="lurk", title="*lurking*", help_text="Lurk at someone!")
     async def lurk(self, ctx, member: discord.Member = None): pass
