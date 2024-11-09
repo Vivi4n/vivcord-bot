@@ -47,7 +47,7 @@ class Stats(commands.Cog):
     def format_datetime(self, date_str):
         try:
             dt = datetime.fromisoformat(date_str)
-            return dt.strftime("%d/%m/%Y")
+            return dt.strftime("%d/%m/%Y %H:%M")
         except (ValueError, TypeError):
             return "Unknown"
 
@@ -113,7 +113,7 @@ class Stats(commands.Cog):
         
         log_text = [
             f"Log Export for {member.display_name} (ID: {member.id})",
-            f"Generated at: {datetime.utcnow().strftime('%d/%m/%Y')}",
+            f"Generated at: {datetime.utcnow().strftime('%d/%m/%Y %H:%M')}",
             "\n=== Basic Information ===",
             f"Join Date: {self.format_datetime(user_data.get('join_date', 'Unknown'))}",
             f"Last Seen: {self.format_datetime(user_data.get('last_seen', 'Never'))}",
