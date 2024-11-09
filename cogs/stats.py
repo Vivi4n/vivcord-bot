@@ -30,11 +30,9 @@ class Stats(commands.Cog):
     async def on_voice_state_update(self, member, before, after):
         user_id = str(member.id)
         
-        # Member joined voice channel
         if before.channel is None and after.channel is not None:
             self.voice_time_tracker[user_id] = datetime.utcnow()
         
-        # Member left voice channel
         elif before.channel is not None and after.channel is None:
             if user_id in self.voice_time_tracker:
                 start_time = self.voice_time_tracker[user_id]
@@ -46,49 +44,46 @@ class Stats(commands.Cog):
                 self.db.save_data()
                 del self.voice_time_tracker[user_id]
 
+    def format_datetime(self, date_str):
+        try:
+            dt = datetime.fromisoformat(date_str)
+            return dt.strftime("%d/%m/%Y")
+        except (ValueError, TypeError):
+            return "Unknown"
+
     @commands.command()
     @commands.has_permissions(kick_members=True)
     async def stats(self, ctx, member: discord.Member = None):
-        """Display comprehensive stats for a user"""
         member = member or ctx.author
         user_id = str(member.id)
         
         user_data = self.db.ensure_user_data(user_id)
         
-        # Create embed
         embed = discord.Embed(
             title=f"Statistics for {member.display_name}",
             color=member.color,
             timestamp=datetime.utcnow()
         )
         
-        # Basic Info
         embed.add_field(
             name="Basic Information",
-            value=f"Join Date: {user_data.get('join_date', 'Unknown')}\n"
-                  f"Last Seen: {user_data.get('last_seen', 'Never')}\n"
+            value=f"Join Date: {self.format_datetime(user_data.get('join_date', 'Unknown'))}\n"
+                  f"Last Seen: {self.format_datetime(user_data.get('last_seen', 'Never'))}\n"
                   f"Messages Sent: {user_data.get('messages', 0)}\n"
                   f"Messages Deleted: {user_data.get('message_deletes', 0)}\n"
                   f"Voice Time: {round(user_data.get('voice_time', 0), 2)} minutes",
             inline=False
         )
         
-        # Moderation Stats
-        warnings_count = len(user_data.get('warnings', []))
-        kicks_count = len(user_data.get('kicks', []))
-        bans_count = len(user_data.get('bans', []))
-        mutes_count = len(user_data.get('mutes', []))
-        
         embed.add_field(
             name="Moderation History",
-            value=f"Warnings: {warnings_count}\n"
-                  f"Kicks: {kicks_count}\n"
-                  f"Bans: {bans_count}\n"
-                  f"Mutes: {mutes_count}",
+            value=f"Warnings: {len(user_data.get('warnings', []))}, "
+                  f"Kicks: {len(user_data.get('kicks', []))}, "
+                  f"Bans: {len(user_data.get('bans', []))}, "
+                  f"Mutes: {len(user_data.get('mutes', []))}",
             inline=False
         )
         
-        # Recent Actions
         recent_actions = user_data.get('action_history', [])[-5:]
         if recent_actions:
             action_text = []
@@ -96,7 +91,7 @@ class Stats(commands.Cog):
                 action_type = action['type'].title()
                 details = action['details']
                 reason = details.get('reason', 'No reason')
-                timestamp = action['timestamp']
+                timestamp = self.format_datetime(action['timestamp'])
                 action_text.append(f"{action_type}: {reason} ({timestamp})")
             action_text = "\n".join(action_text)
         else:
@@ -113,17 +108,15 @@ class Stats(commands.Cog):
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def export_logs(self, ctx, member: discord.Member):
-        """Export complete log history for a user"""
         user_id = str(member.id)
         user_data = self.db.ensure_user_data(user_id)
         
-        # Create a formatted text file
         log_text = [
             f"Log Export for {member.display_name} (ID: {member.id})",
-            f"Generated at: {datetime.utcnow()}",
+            f"Generated at: {datetime.utcnow().strftime('%d/%m/%Y')}",
             "\n=== Basic Information ===",
-            f"Join Date: {user_data.get('join_date', 'Unknown')}",
-            f"Last Seen: {user_data.get('last_seen', 'Never')}",
+            f"Join Date: {self.format_datetime(user_data.get('join_date', 'Unknown'))}",
+            f"Last Seen: {self.format_datetime(user_data.get('last_seen', 'Never'))}",
             f"Total Messages: {user_data.get('messages', 0)}",
             f"Deleted Messages: {user_data.get('message_deletes', 0)}",
             f"Voice Time: {round(user_data.get('voice_time', 0), 2)} minutes",
@@ -132,20 +125,17 @@ class Stats(commands.Cog):
         
         for action in user_data.get('action_history', []):
             log_text.append(
-                f"\n[{action['timestamp']}] {action['type'].upper()}:"
+                f"\n[{self.format_datetime(action['timestamp'])}] {action['type'].upper()}:"
                 f"\nReason: {action['details'].get('reason', 'No reason provided')}"
                 f"\nModerator: {action['details'].get('moderator_name', 'Unknown')}"
             )
         
-        # Save to file
         filename = f"logs_{member.id}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.txt"
         with open(filename, 'w', encoding='utf-8') as f:
             f.write('\n'.join(log_text))
             
-        # Send file to channel
         await ctx.send(f"Log export for {member.mention}", file=discord.File(filename))
         
-        # Clean up file
         os.remove(filename)
 
 async def setup(bot):
