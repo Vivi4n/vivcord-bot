@@ -91,11 +91,13 @@ class AnimeCommands(commands.Cog):
             self.session = None
 
     def create_embed(self, title: str, image_url: str, artist: Optional[str], 
-                    interaction_msg: Optional[str] = None) -> discord.Embed:
+        interaction_msg: Optional[str] = None,
+        member: Optional[discord.Member] = None) -> discord.Embed:
+        color = member.color if member and member.color != discord.Color.default() else discord.Color.purple()
         """Create a standardized embed for anime images"""
         embed = discord.Embed(
             title=title,
-            color=discord.Color.purple(),
+            color=color,
             timestamp=datetime.utcnow()
         )
         
@@ -134,17 +136,22 @@ class AnimeCommands(commands.Cog):
                     return
 
                 interaction_msg = None
+                target_member = mentioned_user
                 if mentioned_user and endpoint in self.INTERACTION_DESCRIPTIONS:
                     interaction_msg = self.INTERACTION_DESCRIPTIONS[endpoint].format(
                         author=ctx.author.mention,
                         target=mentioned_user.mention
                     )
+                
+                elif not mentioned_user:
+                    target_member =  ctx.author
 
                 embed = self.create_embed(
                     title=title,
                     image_url=image_url,
                     artist=image_data.get('artist_name'),
                     interaction_msg=interaction_msg
+                    member=target_member
                 )
                 
                 await ctx.send(embed=embed)
