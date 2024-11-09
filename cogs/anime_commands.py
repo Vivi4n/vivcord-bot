@@ -7,14 +7,6 @@ from typing import Optional, Dict, ClassVar, Callable
 from functools import wraps
 
 def anime_command(name: str, title: str, help_text: str):
-    """
-    Decorator for creating anime commands with consistent structure.
-    
-    Args:
-        name: Command name
-        title: Title for the embed
-        help_text: Help text for the command
-    """
     def decorator(func: Callable):
         @commands.command(name=name)
         @commands.cooldown(1, 5, commands.BucketType.user)
@@ -25,12 +17,9 @@ def anime_command(name: str, title: str, help_text: str):
         return wrapper
     return decorator
 
-class AnimeCommands(commands.Cog):
-    """A cog for anime-related commands using the nekos.best API"""
-    
+class AnimeCommands(commands.Cog):   
     BASE_API_URL: ClassVar[str] = "https://nekos.best/api/v2/"
     
-    # Map commands to their descriptions for interaction messages
     INTERACTION_DESCRIPTIONS: ClassVar[Dict[str, str]] = {
         "pat": "{author} pats {target}",
         "hug": "{author} hugs {target}",
@@ -52,10 +41,9 @@ class AnimeCommands(commands.Cog):
         "thumbsup": "{author} gives {target} a thumbs up",
         "stare": "{author} stares at {target}",
         "think": "{author} thinks about {target}",
-        # Added new interaction descriptions
         "handhold": "{author} holds hands with {target}",
         "handshake": "{author} shakes hands with {target}",
-        #"kick": "{author} kicks {target}",
+        # IS BROKEN: "kick": "{author} kicks {target}",
         "lurk": "{author} lurks at {target}",
         "nod": "{author} nods at {target}",
         "nom": "{author} noms on {target}",
@@ -81,11 +69,9 @@ class AnimeCommands(commands.Cog):
         self.session: Optional[aiohttp.ClientSession] = None
 
     async def cog_load(self):
-        """Initialize aiohttp session when cog loads"""
         self.session = aiohttp.ClientSession()
 
     async def cog_unload(self):
-        """Cleanup aiohttp session when cog unloads"""
         if self.session:
             await self.session.close()
             self.session = None
@@ -94,7 +80,7 @@ class AnimeCommands(commands.Cog):
         interaction_msg: Optional[str] = None,
         member: Optional[discord.Member] = None) -> discord.Embed:
         color = member.color if member and member.color != discord.Color.default() else discord.Color.purple()
-        """Create a standardized embed for anime images"""
+
         embed = discord.Embed(
             title=title,
             color=color,
@@ -112,7 +98,6 @@ class AnimeCommands(commands.Cog):
 
     async def _fetch_anime_image(self, ctx: commands.Context, endpoint: str, 
                                title: str, mentioned_user: Optional[discord.Member] = None) -> None:
-        """Fetch and send an anime image from the API"""
         if not self.session:
             await ctx.send("Bot is not properly initialized. Please try again later.")
             return
@@ -163,7 +148,6 @@ class AnimeCommands(commands.Cog):
             self.logger.error(f"Unexpected error in _fetch_anime_image: {str(e)}")
             await ctx.send("An error occurred while processing your request.")
 
-    # Character Commands
     @anime_command(name="waifu", title="Random Waifu", help_text="Get a random SFW anime waifu image")
     async def waifu(self, ctx, member: discord.Member = None): pass
 
@@ -237,7 +221,6 @@ class AnimeCommands(commands.Cog):
     @anime_command(name="think", title="*thinking*", help_text="Think about someone!")
     async def think(self, ctx, member: discord.Member = None): pass
 
-    # New Interaction Commands
     @anime_command(name="handhold", title="Hand Holding!", help_text="Hold someone's hand!")
     async def handhold(self, ctx, member: discord.Member = None): pass
 
@@ -300,7 +283,6 @@ class AnimeCommands(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-        """Error handling for this cog's commands"""
         if not ctx.command or ctx.command.cog != self:
             return
 
@@ -314,7 +296,6 @@ class AnimeCommands(commands.Cog):
         elif isinstance(error, commands.BadArgument):
             await ctx.send("Invalid argument provided. Please check the command usage.")
         else:
-            # Log the error but let it propagate to the global error handler
             self.logger.error(f"Unexpected error in command {ctx.command}: {str(error)}")
             raise error
 
