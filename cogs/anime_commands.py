@@ -4,7 +4,6 @@ import aiohttp
 import logging
 from datetime import datetime
 from typing import Optional, Dict, ClassVar
-from functools import partial
 
 class AnimeCommands(commands.Cog):
     """A cog for anime-related commands using the nekos.best API"""
@@ -40,23 +39,6 @@ class AnimeCommands(commands.Cog):
         self.bot = bot
         self.logger = logging.getLogger('AnimeCommands')
         self.session: Optional[aiohttp.ClientSession] = None
-        self._setup_interaction_commands()
-
-    def _setup_interaction_commands(self):
-        """Set up interaction commands dynamically"""
-        for cmd_name in self.INTERACTION_DESCRIPTIONS:
-            # Create the interaction command
-            @commands.command(name=cmd_name)
-            @commands.cooldown(1, 5, commands.BucketType.user)
-            async def interaction_cmd(self, ctx, member: discord.Member = None, cmd_name=cmd_name):
-                await self._fetch_anime_image(ctx, cmd_name, cmd_name.title() + "!", member)
-
-            # Set the command's help text
-            interaction_cmd.help = f"Send a {cmd_name} interaction to someone!"
-            
-            # Add the command to the cog
-            interaction_cmd = commands.command(name=cmd_name)(interaction_cmd)
-            setattr(self.__class__, cmd_name, interaction_cmd)
 
     async def cog_load(self):
         """Initialize aiohttp session when cog loads"""
@@ -158,6 +140,127 @@ class AnimeCommands(commands.Cog):
     async def kitsune(self, ctx):
         """Get a random SFW kitsune image"""
         await self._fetch_anime_image(ctx, "kitsune", "Random Kitsune")
+
+    # Interaction Commands
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def pat(self, ctx, member: discord.Member = None):
+        """Pat someone!"""
+        await self._fetch_anime_image(ctx, "pat", "Headpat!", member)
+
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def hug(self, ctx, member: discord.Member = None):
+        """Hug someone!"""
+        await self._fetch_anime_image(ctx, "hug", "Hugs!", member)
+
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def kiss(self, ctx, member: discord.Member = None):
+        """Kiss someone!"""
+        await self._fetch_anime_image(ctx, "kiss", "Kiss!", member)
+
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def highfive(self, ctx, member: discord.Member = None):
+        """High five someone!"""
+        await self._fetch_anime_image(ctx, "highfive", "High Five!", member)
+
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def happy(self, ctx, member: discord.Member = None):
+        """Be happy with someone!"""
+        await self._fetch_anime_image(ctx, "happy", "Happy!", member)
+
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def laugh(self, ctx, member: discord.Member = None):
+        """Laugh with someone!"""
+        await self._fetch_anime_image(ctx, "laugh", "Hahaha!", member)
+
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def poke(self, ctx, member: discord.Member = None):
+        """Poke someone!"""
+        await self._fetch_anime_image(ctx, "poke", "Poke!", member)
+
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def wave(self, ctx, member: discord.Member = None):
+        """Wave at someone!"""
+        await self._fetch_anime_image(ctx, "wave", "Wave!", member)
+
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def cry(self, ctx, member: discord.Member = None):
+        """Cry with someone!"""
+        await self._fetch_anime_image(ctx, "cry", "Crying...", member)
+
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def dance(self, ctx, member: discord.Member = None):
+        """Dance with someone!"""
+        await self._fetch_anime_image(ctx, "dance", "Dancing!", member)
+
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def baka(self, ctx, member: discord.Member = None):
+        """Call someone baka!"""
+        await self._fetch_anime_image(ctx, "baka", "Baka!", member)
+
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def feed(self, ctx, member: discord.Member = None):
+        """Feed someone!"""
+        await self._fetch_anime_image(ctx, "feed", "Feeding!", member)
+
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def bite(self, ctx, member: discord.Member = None):
+        """Bite someone!"""
+        await self._fetch_anime_image(ctx, "bite", "Nom!", member)
+
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def blush(self, ctx, member: discord.Member = None):
+        """Blush at someone!"""
+        await self._fetch_anime_image(ctx, "blush", "Blushing!", member)
+
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def bored(self, ctx, member: discord.Member = None):
+        """Show you're bored!"""
+        await self._fetch_anime_image(ctx, "bored", "Bored...", member)
+
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def facepalm(self, ctx, member: discord.Member = None):
+        """Facepalm at someone!"""
+        await self._fetch_anime_image(ctx, "facepalm", "*facepalm*", member)
+
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def cuddle(self, ctx, member: discord.Member = None):
+        """Cuddle with someone!"""
+        await self._fetch_anime_image(ctx, "cuddle", "Cuddles!", member)
+
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def thumbsup(self, ctx, member: discord.Member = None):
+        """Give someone a thumbs up!"""
+        await self._fetch_anime_image(ctx, "thumbsup", "👍", member)
+
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def stare(self, ctx, member: discord.Member = None):
+        """Stare at someone!"""
+        await self._fetch_anime_image(ctx, "stare", "*stares*", member)
+
+    @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def think(self, ctx, member: discord.Member = None):
+        """Think about someone!"""
+        await self._fetch_anime_image(ctx, "think", "*thinking*", member)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
