@@ -216,7 +216,7 @@ class AnimeCommands(commands.Cog):
     @anime_command(name="handshake", title="Handshake!", help_text="Shake hands with someone!")
     async def handshake(self, ctx, member: discord.Member = None): pass
 
-    @anime_command(name="kick", title="Kick!", help_text="Kick someone!")
+    @anime_command(name="punt", title="Kick!", help_text="Kick someone!")
     async def kick(self, ctx, member: discord.Member = None): pass
 
     @anime_command(name="lurk", title="*lurking*", help_text="Lurk at someone!")
