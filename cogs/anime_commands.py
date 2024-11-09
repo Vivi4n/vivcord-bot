@@ -209,6 +209,67 @@ class AnimeCommands(commands.Cog):
     @anime_command(name="think", title="*thinking*", help_text="Think about someone!")
     async def think(self, ctx, member: discord.Member = None): pass
 
+    # New Interaction Commands
+    @anime_command(name="handhold", title="Hand Holding!", help_text="Hold someone's hand!")
+    async def handhold(self, ctx, member: discord.Member = None): pass
+
+    @anime_command(name="handshake", title="Handshake!", help_text="Shake hands with someone!")
+    async def handshake(self, ctx, member: discord.Member = None): pass
+
+    @anime_command(name="kick", title="Kick!", help_text="Kick someone!")
+    async def kick(self, ctx, member: discord.Member = None): pass
+
+    @anime_command(name="lurk", title="*lurking*", help_text="Lurk at someone!")
+    async def lurk(self, ctx, member: discord.Member = None): pass
+
+    @anime_command(name="nod", title="*nods*", help_text="Nod at someone!")
+    async def nod(self, ctx, member: discord.Member = None): pass
+
+    @anime_command(name="nom", title="Nom!", help_text="Nom on someone!")
+    async def nom(self, ctx, member: discord.Member = None): pass
+
+    @anime_command(name="nope", title="Nope!", help_text="Say nope to someone!")
+    async def nope(self, ctx, member: discord.Member = None): pass
+
+    @anime_command(name="peck", title="Peck!", help_text="Give someone a peck!")
+    async def peck(self, ctx, member: discord.Member = None): pass
+
+    @anime_command(name="pout", title="*pouts*", help_text="Pout at someone!")
+    async def pout(self, ctx, member: discord.Member = None): pass
+
+    @anime_command(name="punch", title="Punch!", help_text="Punch someone!")
+    async def punch(self, ctx, member: discord.Member = None): pass
+
+    @anime_command(name="shoot", title="Bang!", help_text="Shoot at someone!")
+    async def shoot(self, ctx, member: discord.Member = None): pass
+
+    @anime_command(name="shrug", title="*shrugs*", help_text="Shrug at someone!")
+    async def shrug(self, ctx, member: discord.Member = None): pass
+
+    @anime_command(name="slap", title="Slap!", help_text="Slap someone!")
+    async def slap(self, ctx, member: discord.Member = None): pass
+
+    @anime_command(name="sleep", title="Zzz...", help_text="Fall asleep on someone!")
+    async def sleep(self, ctx, member: discord.Member = None): pass
+
+    @anime_command(name="smile", title="Smile!", help_text="Smile at someone!")
+    async def smile(self, ctx, member: discord.Member = None): pass
+
+    @anime_command(name="smug", title="*smug*", help_text="Give someone a smug look!")
+    async def smug(self, ctx, member: discord.Member = None): pass
+
+    @anime_command(name="tickle", title="Tickle!", help_text="Tickle someone!")
+    async def tickle(self, ctx, member: discord.Member = None): pass
+
+    @anime_command(name="wink", title="*winks*", help_text="Wink at someone!")
+    async def wink(self, ctx, member: discord.Member = None): pass
+
+    @anime_command(name="yawn", title="*yawns*", help_text="Yawn at someone!")
+    async def yawn(self, ctx, member: discord.Member = None): pass
+
+    @anime_command(name="yeet", title="YEET!", help_text="Yeet someone!")
+    async def yeet(self, ctx, member: discord.Member = None): pass
+
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         """Error handling for this cog's commands"""
