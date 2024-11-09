@@ -13,9 +13,10 @@ def anime_command(name: str, title: str, help_text: str):
         @wraps(func)
         async def wrapper(self, ctx, member: Optional[discord.Member] = None):
             if not member and ctx.message.reference:
-                referenced_message = await ctx.fetch_reference()
-                if referenced_message:
-                    member = referenced_message.author           
+                referenced_msg = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+                if referenced_msg:
+                    member = referenced_msg.author
+            
             await self._fetch_anime_image(ctx, name, title, member)
         wrapper.__doc__ = help_text
         return wrapper
