@@ -132,8 +132,8 @@ class AnimeCommands(commands.Cog):
             self.logger.error(f"API request failed: {str(e)}")
             await ctx.send("Failed to connect to the image service. Please try again later.")
         except Exception as e:
-            self.logger.error(f"Unexpected error: {str(e)}")
-            await ctx.send("An unexpected error occurred. Please try again later.")
+            self.logger.error(f"Unexpected error in _fetch_anime_image: {str(e)}")
+            await ctx.send("An error occurred while processing your request.")
 
     # Character Commands
     @anime_command(name="waifu", title="Random Waifu", help_text="Get a random SFW anime waifu image")
@@ -211,7 +211,10 @@ class AnimeCommands(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-        """Centralized error handling for the cog"""
+        """Error handling for this cog's commands"""
+        if not ctx.command or ctx.command.cog != self:
+            return
+
         if isinstance(error, commands.CommandOnCooldown):
             await ctx.send(
                 f"Please wait {error.retry_after:.1f} seconds before using this command again.",
@@ -222,8 +225,9 @@ class AnimeCommands(commands.Cog):
         elif isinstance(error, commands.BadArgument):
             await ctx.send("Invalid argument provided. Please check the command usage.")
         else:
-            self.logger.error(f"Unhandled error: {str(error)}")
-            await ctx.send("An error occurred while processing your request.")
+            # Log the error but let it propagate to the global error handler
+            self.logger.error(f"Unexpected error in command {ctx.command}: {str(error)}")
+            raise error
 
 async def setup(bot):
     await bot.add_cog(AnimeCommands(bot))
