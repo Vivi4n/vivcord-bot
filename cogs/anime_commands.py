@@ -10,8 +10,12 @@ def anime_command(name: str, title: str, help_text: str):
     def decorator(func: Callable):
         @commands.command(name=name)
         @commands.cooldown(1, 5, commands.BucketType.user)
-        @wraps(func)  # Preserves the function's metadata
-        async def wrapper(self, ctx, member: discord.Member = None):
+        @wraps(func)
+        async def wrapper(self, ctx, member: Optional[discord.Member] = None):
+            if not member and ctx.message.reference:
+                referenced_message = await ctx.fetch_reference()
+                if referenced_message:
+                    member = referenced_message.author           
             await self._fetch_anime_image(ctx, name, title, member)
         wrapper.__doc__ = help_text
         return wrapper
