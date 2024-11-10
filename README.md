@@ -1,5 +1,5 @@
 # vivcord-bot
-Just the administration bot used by my Discord guild, nothing too special, to add a lot more stuff in the future. This is just a project for fun, but, hey, it's fully functional (:
+Just the administration bot used by my Discord guild, nothing too special. This is just a project for fun, but, hey, it's fully functional. Any cogs you don't need, you can just omit from main.py, as I realize anime_commands aren't for everyone, or any other cogs I happen to add in the future. There's a lot more stuff to add in the future so it feels a bit more polished and complete. Hope you like it ^_^
 
 # Requirements
 Made for Python 3.11, could work with older versions. Install discord-py, PyNaCl, aiohttp via pip --
@@ -19,4 +19,4 @@ python3 main.py / python main.py
 ```
 
 # Moar
-Have fun, it's nothing special and it needs a lot more updates.
+Have fun, I decided to build this as a fun little project specifically in Python, could have probably chosen another language, but Python is based.
