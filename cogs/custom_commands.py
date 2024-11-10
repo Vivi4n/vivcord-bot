@@ -14,13 +14,11 @@ class CustomCommands(commands.Cog):
         self.commands = self.load_commands()
 
     async def log_to_modchannel(self, guild, embed):
-        """Send log message to mod-logs channel"""
         mod_channel = discord.utils.get(guild.channels, name='mod-logs')
         if mod_channel:
             await mod_channel.send(embed=embed)
 
     def load_commands(self):
-        """Load custom commands from JSON file"""
         if not os.path.exists(self.commands_file):
             return {}
         try:
@@ -31,23 +29,68 @@ class CustomCommands(commands.Cog):
             return {}
 
     def save_commands(self):
-        """Save custom commands to JSON file"""
         try:
             with open(self.commands_file, 'w') as f:
                 json.dump(self.commands, f, indent=4)
         except Exception as e:
             self.logger.error(f"Failed to save custom commands: {e}")
 
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.author.bot:
+            return
+
+        content = message.content.lower().strip()
+        if content.startswith('no') and content.endswith('u'):
+            parts = content.split()
+            if len(parts) > 1 and all(part == 'no' for part in parts[:-1]) and parts[-1] == 'u':
+                response = 'no ' * (len(parts)) + 'u'
+                await message.channel.send(response)
+                return
+
+        if not message.content.startswith('!'):
+            return
+
+        guild_id = str(message.guild.id)
+        if guild_id not in self.commands:
+            return
+
+        command = message.content[1:].split()[0]
+        if command not in self.commands[guild_id]:
+            return
+
+        cmd_data = self.commands[guild_id][command]
+        required_role = cmd_data["required_role"]
+
+        if required_role != 0 and not any(role.id == required_role for role in message.author.roles):
+            await message.channel.send("You don't have permission to use this command!")
+            return
+
+        response = cmd_data["response"]
+        
+        if cmd_data.get("requires_mention", False):
+            target_user = None
+            if message.reference and message.reference.resolved:
+                target_user = message.reference.resolved.author
+            elif message.mentions:
+                target_user = message.mentions[0]
+            
+            if not target_user:
+                await message.channel.send("Command requires user mention!")
+                return
+                
+            response = response.replace("{mention}", target_user.mention)
+
+        await message.channel.send(response)
+
     @commands.group(name='cc', invoke_without_command=True)
     async def custom_commands(self, ctx):
-        """Custom commands management"""
         if ctx.invoked_subcommand is None:
             await ctx.send("Available subcommands: add, remove, list")
 
     @custom_commands.command(name='add')
     @commands.has_permissions(manage_messages=True)
     async def add_command(self, ctx, command: str, required_role: int, *, response: str):
-        """Add a custom command"""
         guild_id = str(ctx.guild.id)
         
         if guild_id not in self.commands:
@@ -69,7 +112,6 @@ class CustomCommands(commands.Cog):
         mention_info = " (requires user mention)" if requires_mention else ""
         await ctx.send(f"Added command `{command}` with role requirement {required_role}{mention_info}")
 
-        # Log to mod-logs
         embed = discord.Embed(
             title="Custom Command Added",
             color=discord.Color.green(),
@@ -87,19 +129,15 @@ class CustomCommands(commands.Cog):
     @custom_commands.command(name='remove')
     @commands.has_permissions(manage_messages=True)
     async def remove_command(self, ctx, command: str):
-        """Remove a custom command"""
         guild_id = str(ctx.guild.id)
         
         if guild_id in self.commands and command in self.commands[guild_id]:
-            # Store command data before removal for logging
             cmd_data = self.commands[guild_id][command]
             
-            # Remove command
             del self.commands[guild_id][command]
             self.save_commands()
             await ctx.send(f"Removed command `{command}`")
 
-            # Log to mod-logs
             embed = discord.Embed(
                 title="Custom Command Removed",
                 color=discord.Color.red(),
@@ -116,7 +154,6 @@ class CustomCommands(commands.Cog):
 
     @custom_commands.command(name='list')
     async def list_commands(self, ctx):
-        """List all custom commands"""
         guild_id = str(ctx.guild.id)
         
         if guild_id not in self.commands or not self.commands[guild_id]:
@@ -139,46 +176,6 @@ class CustomCommands(commands.Cog):
             )
 
         await ctx.send(embed=embed)
-
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        """Handle custom commands in messages"""
-        if message.author.bot or not message.content.startswith('!'):
-            return
-
-        guild_id = str(message.guild.id)
-        if guild_id not in self.commands:
-            return
-
-        command = message.content[1:].split()[0]
-        if command not in self.commands[guild_id]:
-            return
-
-        cmd_data = self.commands[guild_id][command]
-        required_role = cmd_data["required_role"]
-
-        # Check role permission
-        if required_role != 0 and not any(role.id == required_role for role in message.author.roles):
-            await message.channel.send("You don't have permission to use this command!")
-            return
-
-        response = cmd_data["response"]
-        
-        # Handle mention if command requires it
-        if cmd_data.get("requires_mention", False):
-            target_user = None
-            if message.reference and message.reference.resolved:
-                target_user = message.reference.resolved.author
-            elif message.mentions:
-                target_user = message.mentions[0]
-            
-            if not target_user:
-                await message.channel.send("Command requires user mention!")
-                return
-                
-            response = response.replace("{mention}", target_user.mention)
-
-        await message.channel.send(response)
 
 async def setup(bot):
     await bot.add_cog(CustomCommands(bot))
