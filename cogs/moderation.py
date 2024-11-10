@@ -216,6 +216,64 @@ class Moderation(commands.Cog):
         )
         
         await ctx.send(f"{member.mention} has been kicked. Reason: {reason or 'No reason provided'}")
+     
+    @commands.command()
+    @commands.has_permissions(kick_members=True)
+    async def dm(self, ctx, member: discord.Member, *, message: str):
+
+        if member.bot:
+            await ctx.send("Cannot send DMs to bot accounts.")
+            return
+
+        try:
+            sender_color = ctx.author.color if ctx.author.color != discord.Color.default() else discord.Color.blue()
+
+            dm_embed = discord.Embed(
+                description=message,
+                color=sender_color,
+                timestamp=datetime.utcnow()
+            )
+            dm_embed.set_author(
+                name=f"Message from {ctx.guild.name} Staff",
+                icon_url=ctx.guild.icon.url if ctx.guild.icon else None
+            )
+            dm_embed.set_footer(text=f"Sent by {ctx.author}")
+
+            await member.send(embed=dm_embed)
+
+            log_embed = discord.Embed(
+                title="Staff DM Sent",
+                color=sender_color,
+                timestamp=datetime.utcnow()
+            )
+            log_embed.add_field(name="To", value=f"{member.mention} ({member.name})", inline=False)
+            log_embed.add_field(name="From", value=f"{ctx.author.mention} ({ctx.author.name})", inline=False)
+            log_embed.add_field(name="Message", value=message, inline=False)
+            log_embed.set_footer(text=f"User ID: {member.id}")
+
+            await self.log_to_modchannel(ctx.guild, log_embed)
+            
+            self.db.log_action(
+                member.id,
+                "dm",
+                {
+                    "message": message,
+                    "moderator": ctx.author.id,
+                    "moderator_name": str(ctx.author),
+                    "timestamp": str(datetime.utcnow()),
+                    "guild_id": ctx.guild.id
+                }
+            )
+
+            await ctx.send(f"✅ Message sent to {member.mention}")
+
+        except discord.Forbidden:
+            await ctx.send(f"❌ Could not send DM to {member.mention}. They may have DMs disabled or have blocked the bot.")
+        except discord.HTTPException as e:
+            await ctx.send(f"❌ Failed to send message: {str(e)}")
+        except Exception as e:
+            self.logger.error(f"Error in dm command: {str(e)}")
+            await ctx.send("❌ An unexpected error occurred while sending the message.")
 
 async def setup(bot):
     await bot.add_cog(Moderation(bot))
