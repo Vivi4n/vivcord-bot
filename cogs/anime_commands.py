@@ -17,9 +17,7 @@ def anime_command(name: str, title: str, help_text: str):
                 if referenced_msg:
                     member = referenced_msg.author
             
-            # Use endpoint parameter instead
-            endpoint = getattr(func, '_endpoint', name)
-            await self._fetch_anime_image(ctx, endpoint, title, member)
+            await self._fetch_anime_image(ctx, name, title, member)
         wrapper.__doc__ = help_text
         return wrapper
     return decorator
@@ -110,22 +108,19 @@ class AnimeCommands(commands.Cog):
             return
 
         url = f"{self.BASE_API_URL}{endpoint}"
-        self.logger.info(f"Attempting to fetch from URL: {url}")  # Debug log
-        
+        self.logger.info(f"Attempting to fetch from URL: {url}")
+
         try:
             async with self.session.get(url) as response:
-                self.logger.info(f"Response status: {response.status}")  # Debug log
-                self.logger.info(f"Response headers: {response.headers}")  # Debug log
+                self.logger.info(f"Response status: {response.status}")
                 
                 if response.status != 200:
                     response_text = await response.text()
-                    self.logger.error(f"API Error - Status: {response.status}, Response: {response_text}")  # Debug log
+                    self.logger.error(f"API Error - Status: {response.status}, Response: {response_text}")
                     await ctx.send(f"API returned status {response.status}. Please try again later.")
                     return
 
                 data = await response.json()
-                self.logger.info(f"Response data: {data}")  # Debug log
-                
                 results = data.get('results', [])
                 if not results:
                     await ctx.send("No images found. Please try again later.")
@@ -144,7 +139,6 @@ class AnimeCommands(commands.Cog):
                         author=ctx.author.mention,
                         target=mentioned_user.mention
                     )
-                
                 elif not mentioned_user:
                     target_member = ctx.author
 
@@ -167,14 +161,14 @@ class AnimeCommands(commands.Cog):
 
     @commands.command(name="punt")
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def punt(self, ctx, member: discord.Member = None):
+    async def punt(self, ctx, member: Optional[discord.Member] = None):
         """Kick someone!"""
         if not member and ctx.message.reference:
             referenced_msg = await ctx.channel.fetch_message(ctx.message.reference.message_id)
             if referenced_msg:
                 member = referenced_msg.author
         
-        self.logger.info(f"Punt command called by {ctx.author} targeting {member}")  # Debug log
+        self.logger.info(f"Punt command called by {ctx.author} targeting {member}")
         await self._fetch_anime_image(ctx, "kick", "Kick!", member)
 
     @anime_command(name="waifu", title="Random Waifu", help_text="Get a random SFW anime waifu image")
@@ -189,7 +183,6 @@ class AnimeCommands(commands.Cog):
     @anime_command(name="kitsune", title="Random Kitsune", help_text="Get a random SFW kitsune image")
     async def kitsune(self, ctx, member: discord.Member = None): pass
 
-    # Interaction Commands
     @anime_command(name="pat", title="Headpat!", help_text="Pat someone!")
     async def pat(self, ctx, member: discord.Member = None): pass
 
@@ -255,10 +248,6 @@ class AnimeCommands(commands.Cog):
 
     @anime_command(name="handshake", title="Handshake!", help_text="Shake hands with someone!")
     async def handshake(self, ctx, member: discord.Member = None): pass
-
-    @anime_command(name="punt", title="Kick!", help_text="Kick someone!")
-    async def kick(self, ctx, member: discord.Member = None):
-        await self._fetch_anime_image(ctx, "kick", "Kick!", member)
 
     @anime_command(name="lurk", title="*lurking*", help_text="Lurk at someone!")
     async def lurk(self, ctx, member: discord.Member = None): pass
