@@ -48,7 +48,7 @@ class AnimeCommands(commands.Cog):
         "think": "{author} thinks about {target}",
         "handhold": "{author} holds hands with {target}",
         "handshake": "{author} shakes hands with {target}",
-        "punt": "{author} kicks {target}",
+        "kick": "{author} kicks {target}",
         "lurk": "{author} lurks at {target}",
         "nod": "{author} nods at {target}",
         "nom": "{author} noms on {target}",
