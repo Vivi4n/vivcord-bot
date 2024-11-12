@@ -97,7 +97,7 @@ class AnimeCommands(commands.Cog):
             
         embed.set_image(url=image_url)
         footer_text = f"Artist: {artist} | " if artist else ""
-        embed.set_footer(text=f"{footer_text}Powered by nekos.best")
+        embed.set_footer(text=f"{footer_text}Fueled by Viv's brainrot")
         
         return embed
 
