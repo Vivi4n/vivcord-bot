@@ -17,7 +17,9 @@ def anime_command(name: str, title: str, help_text: str):
                 if referenced_msg:
                     member = referenced_msg.author
             
-            await self._fetch_anime_image(ctx, name, title, member)
+            # Use endpoint parameter instead
+            endpoint = getattr(func, '_endpoint', name)
+            await self._fetch_anime_image(ctx, endpoint, title, member)
         wrapper.__doc__ = help_text
         return wrapper
     return decorator
