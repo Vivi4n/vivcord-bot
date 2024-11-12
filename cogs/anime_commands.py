@@ -107,16 +107,9 @@ class AnimeCommands(commands.Cog):
             await ctx.send("Bot is not properly initialized. Please try again later.")
             return
 
-        url = f"{self.BASE_API_URL}{endpoint}"
-        self.logger.info(f"Attempting to fetch from URL: {url}")
-
         try:
-            async with self.session.get(url) as response:
-                self.logger.info(f"Response status: {response.status}")
-                
+            async with self.session.get(f"{self.BASE_API_URL}{endpoint}") as response:
                 if response.status != 200:
-                    response_text = await response.text()
-                    self.logger.error(f"API Error - Status: {response.status}, Response: {response_text}")
                     await ctx.send(f"API returned status {response.status}. Please try again later.")
                     return
 
@@ -158,18 +151,6 @@ class AnimeCommands(commands.Cog):
         except Exception as e:
             self.logger.error(f"Unexpected error in _fetch_anime_image: {str(e)}")
             await ctx.send("An error occurred while processing your request.")
-
-    @commands.command(name="punt")
-    @commands.cooldown(1, 5, commands.BucketType.user)
-    async def punt(self, ctx, member: Optional[discord.Member] = None):
-        """Kick someone!"""
-        if not member and ctx.message.reference:
-            referenced_msg = await ctx.channel.fetch_message(ctx.message.reference.message_id)
-            if referenced_msg:
-                member = referenced_msg.author
-        
-        self.logger.info(f"Punt command called by {ctx.author} targeting {member}")
-        await self._fetch_anime_image(ctx, "kick", "Kick!", member)
 
     @anime_command(name="waifu", title="Random Waifu", help_text="Get a random SFW anime waifu image")
     async def waifu(self, ctx, member: discord.Member = None): pass
@@ -248,6 +229,17 @@ class AnimeCommands(commands.Cog):
 
     @anime_command(name="handshake", title="Handshake!", help_text="Shake hands with someone!")
     async def handshake(self, ctx, member: discord.Member = None): pass
+
+    @commands.command(name="punt")
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def punt(self, ctx, member: Optional[discord.Member] = None):
+        """Kick someone!"""
+        if not member and ctx.message.reference:
+            referenced_msg = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+            if referenced_msg:
+                member = referenced_msg.author
+        
+        await self._fetch_anime_image(ctx, "kick", "Kick!", member)
 
     @anime_command(name="lurk", title="*lurking*", help_text="Lurk at someone!")
     async def lurk(self, ctx, member: discord.Member = None): pass
