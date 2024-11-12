@@ -109,13 +109,23 @@ class AnimeCommands(commands.Cog):
             await ctx.send("Bot is not properly initialized. Please try again later.")
             return
 
+        url = f"{self.BASE_API_URL}{endpoint}"
+        self.logger.info(f"Attempting to fetch from URL: {url}")  # Debug log
+        
         try:
-            async with self.session.get(f"{self.BASE_API_URL}{endpoint}") as response:
+            async with self.session.get(url) as response:
+                self.logger.info(f"Response status: {response.status}")  # Debug log
+                self.logger.info(f"Response headers: {response.headers}")  # Debug log
+                
                 if response.status != 200:
+                    response_text = await response.text()
+                    self.logger.error(f"API Error - Status: {response.status}, Response: {response_text}")  # Debug log
                     await ctx.send(f"API returned status {response.status}. Please try again later.")
                     return
 
                 data = await response.json()
+                self.logger.info(f"Response data: {data}")  # Debug log
+                
                 results = data.get('results', [])
                 if not results:
                     await ctx.send("No images found. Please try again later.")
@@ -136,7 +146,7 @@ class AnimeCommands(commands.Cog):
                     )
                 
                 elif not mentioned_user:
-                    target_member =  ctx.author
+                    target_member = ctx.author
 
                 embed = self.create_embed(
                     title=title,
@@ -154,6 +164,18 @@ class AnimeCommands(commands.Cog):
         except Exception as e:
             self.logger.error(f"Unexpected error in _fetch_anime_image: {str(e)}")
             await ctx.send("An error occurred while processing your request.")
+
+    @commands.command(name="punt")
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def punt(self, ctx, member: discord.Member = None):
+        """Kick someone!"""
+        if not member and ctx.message.reference:
+            referenced_msg = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+            if referenced_msg:
+                member = referenced_msg.author
+        
+        self.logger.info(f"Punt command called by {ctx.author} targeting {member}")  # Debug log
+        await self._fetch_anime_image(ctx, "kick", "Kick!", member)
 
     @anime_command(name="waifu", title="Random Waifu", help_text="Get a random SFW anime waifu image")
     async def waifu(self, ctx, member: discord.Member = None): pass
