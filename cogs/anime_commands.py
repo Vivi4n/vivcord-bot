@@ -235,7 +235,8 @@ class AnimeCommands(commands.Cog):
     async def handshake(self, ctx, member: discord.Member = None): pass
 
     @anime_command(name="punt", title="Kick!", help_text="Kick someone!")
-    async def kick(self, ctx, member: discord.Member = None): pass
+    async def kick(self, ctx, member: discord.Member = None):
+        await self._fetch_anime_image(ctx, "kick", "Kick!", member)
 
     @anime_command(name="lurk", title="*lurking*", help_text="Lurk at someone!")
     async def lurk(self, ctx, member: discord.Member = None): pass
