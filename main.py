@@ -62,7 +62,8 @@ class AdminBot(commands.Bot):
             'error_handler',
             'stats',
             'anime_commands',
-            'custom_commands'
+            'custom_commands',
+            'viv_ai'
         ]
         
         for cog in cogs:
