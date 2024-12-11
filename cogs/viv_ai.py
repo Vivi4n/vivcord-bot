@@ -54,7 +54,9 @@ class GrokAI(commands.Cog):
                 {"role": "system", "content": "You are Viv's AI assistant. Respond naturally while maintaining this identity."},
                 {"role": "user", "content": prompt}
             ],
-            "max_tokens": 10000
+            "model": "grok-beta",
+            "temperature": 0.7,
+            "stream": False
         }
 
         try:
