@@ -54,7 +54,7 @@ class GrokAI(commands.Cog):
                 {"role": "system", "content": "You are Viv's AI assistant. Respond naturally while maintaining this identity."},
                 {"role": "user", "content": prompt}
             ],
-            "model": "grok-beta",
+            "model": "grok-vision-beta",
             "temperature": 0.7,
             "stream": False
         }
