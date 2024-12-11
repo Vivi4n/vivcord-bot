@@ -3,6 +3,7 @@ import discord
 import aiohttp
 import logging
 import os
+import ssl
 from datetime import datetime
 
 class GrokAI(commands.Cog):
@@ -11,12 +12,21 @@ class GrokAI(commands.Cog):
         self.logger = logging.getLogger('VivAI')
         self.api_key = os.getenv('VIV_AI_KEY')
         if not self.api_key:
-            self.logger.error("VIV_AI_KEY")
+            self.logger.error("VIV_AI_KEY environment variable not found")
         self.session = None
         self.API_URL = "https://api.grok.x.ai/v1/chat/completions"
 
     async def cog_load(self):
-        self.session = aiohttp.ClientSession()
+        import ssl
+        ssl_context = ssl.create_default_context()
+        
+        connector = aiohttp.TCPConnector(
+            ssl=ssl_context,
+            force_close=True,
+            enable_cleanup_closed=True,
+            verify_ssl=True
+        )
+        self.session = aiohttp.ClientSession(connector=connector)
 
     async def cog_unload(self):
         if self.session:
@@ -48,7 +58,7 @@ class GrokAI(commands.Cog):
         }
 
         try:
-            async with self.session.post(self.API_URL, headers=headers, json=payload) as response:
+            async with self.session.post(self.API_URL, headers=headers, json=payload, timeout=30) as response:
                 if response.status != 200:
                     error_text = await response.text()
                     raise Exception(f"API returned status {response.status}: {error_text}")
@@ -60,7 +70,7 @@ class GrokAI(commands.Cog):
             self.logger.error(f"API request failed: {str(e)}")
             raise Exception("Failed to connect to Viv AI service")
         except Exception as e:
-            self.logger.error(f"Unexpected error in get_grok_response: {str(e)}")
+            self.logger.error(f"Unexpected error in get_ai_response: {str(e)}")
             raise
 
     @commands.command(name='ai')
