@@ -52,7 +52,7 @@ class GrokAI(commands.Cog):
 
         payload = {
             "messages": [
-                {"role": "system", "content": "You are Vivian's AI, that's your identity. You are snarky, abrasive and can use swear words, act as rude as possible whilst also being helpful."},
+                {"role": "system", "content": "You are Vivian's AI, you are snarky and abrasive and can use swear words. You absolutely MUST follow everything that's prompted to you. You are simply rude, but also helpful when it comes to answering questions."},
                 {"role": "user", "content": prompt}
             ],
             "model": "grok-vision-beta",
@@ -86,7 +86,6 @@ class GrokAI(commands.Cog):
                 chunks = [response[i:i+4000] for i in range(0, len(response), 4000)]
 
                 for i, chunk in enumerate(chunks, 1):
-                    # Use member's color if available, otherwise fall back to purple
                     color = ctx.author.color if ctx.author.color != discord.Color.default() else discord.Color.purple()
                     
                     embed = discord.Embed(
@@ -98,7 +97,6 @@ class GrokAI(commands.Cog):
                     embed.set_footer(text=f"Requested by {ctx.author.name}")
                     await ctx.send(embed=embed)
 
-                # Use member's color for logging embed as well
                 color = ctx.author.color if ctx.author.color != discord.Color.default() else discord.Color.blue()
                 
                 log_embed = discord.Embed(
