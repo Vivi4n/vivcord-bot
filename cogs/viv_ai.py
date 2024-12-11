@@ -13,7 +13,7 @@ class GrokAI(commands.Cog):
         if not self.api_key:
             self.logger.error("VIV_AI_KEY")
         self.session = None
-        self.API_URL = "https://api.grok.com/v1/chat/completions"
+        self.API_URL = "https://api.grok.x.ai/v1/chat/completions"
 
     async def cog_load(self):
         self.session = aiohttp.ClientSession()
