@@ -6,6 +6,7 @@ import os
 import ssl
 from datetime import datetime
 
+
 class GrokAI(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -19,7 +20,7 @@ class GrokAI(commands.Cog):
     async def cog_load(self):
         import ssl
         ssl_context = ssl.create_default_context()
-        
+
         connector = aiohttp.TCPConnector(
             ssl=ssl_context,
             force_close=True,
@@ -82,24 +83,35 @@ class GrokAI(commands.Cog):
             try:
                 response = await self.get_grok_response(prompt)
 
-                embed = discord.Embed(
-                    title="Viv's AI Response",
-                    description=response,
-                    color=discord.Color.purple(),
-                    timestamp=datetime.utcnow()
-                )
-                embed.set_footer(text=f"Requested by {ctx.author.name}")
+                chunks = [response[i:i+4000] for i in range(0, len(response), 4000)]
 
-                await ctx.send(embed=embed)
+                for i, chunk in enumerate(chunks, 1):
+                    embed = discord.Embed(
+                        title=f"Viv's AI Response {f'(Part {i}/{len(chunks)})' if len(chunks) > 1 else ''}",
+                        description=chunk,
+                        color=discord.Color.purple(),
+                        timestamp=datetime.utcnow()
+                    )
+                    embed.set_footer(text=f"Requested by {ctx.author.name}")
+                    await ctx.send(embed=embed)
 
-                # Log the interaction
                 log_embed = discord.Embed(
                     title="AI Interaction",
                     color=discord.Color.blue(),
                     timestamp=datetime.utcnow()
                 )
-                log_embed.add_field(name="User", value=f"{ctx.author.mention} ({ctx.author.name})", inline=False)
+                log_embed.add_field(
+                    name="User",
+                    value=f"{ctx.author.mention} ({ctx.author.name})",
+                    inline=False
+                )
                 log_embed.add_field(name="Prompt", value=prompt, inline=False)
+                if len(chunks) > 1:
+                    log_embed.add_field(
+                        name="Note",
+                        value=f"Response was split into {len(chunks)} parts",
+                        inline=False
+                    )
                 log_embed.set_footer(text=f"User ID: {ctx.author.id}")
 
                 await self.log_to_modchannel(ctx.guild, log_embed)
@@ -108,6 +120,7 @@ class GrokAI(commands.Cog):
                 error_message = f"Error: {str(e)}"
                 self.logger.error(error_message)
                 await ctx.send(f"Sorry, I encountered an error: {error_message}")
+
 
 async def setup(bot):
     await bot.add_cog(GrokAI(bot))
