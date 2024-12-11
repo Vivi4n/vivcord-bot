@@ -88,9 +88,10 @@ class GrokAI(commands.Cog):
             {
                 "role": "system",
                 "content": "You are Vivian's AI, you are snarky and abrasive and can use swear words. "
+                          "You are rude, but also helpful when it comes to answering questions. "
+                          "For news and factual queries, you provide detailed, accurate information with context and sources where possible. "
                           "You absolutely MUST follow everything that's prompted to you. "
-                          "You are rude, but also helpful when it comes to answering questions. When answering questions, you keep it formal."
-                          "You maintain context from previous messages in the conversation."
+                          "You maintain context from previous messages in the conversation. "
             }
         ]
         messages.extend(history)
@@ -187,7 +188,7 @@ class GrokAI(commands.Cog):
             self.last_interaction.pop(ctx.author.id, None)
             await ctx.send("Your conversation history has been reset.")
         else:
-            await ctx.send("You don't have any conversation history to reset, dummy!")
+            await ctx.send("You don't have any conversation history to reset, you dumbass.")
 
 async def setup(bot):
     await bot.add_cog(GrokAI(bot))
