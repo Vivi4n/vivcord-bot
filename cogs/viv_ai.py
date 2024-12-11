@@ -99,7 +99,7 @@ class GrokAI(commands.Cog):
 
         payload = {
             "messages": messages,
-            "model": "grok-vision-beta",
+            "model": "grok-beta",
             "temperature": 0.5,
             "stream": False
         }
