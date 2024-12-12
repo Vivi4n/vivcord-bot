@@ -87,8 +87,8 @@ class GrokAI(commands.Cog):
         messages = [
             {
                 "role": "system",
-                "content": "You are Vivian's AI, you are snarky and abrasive and can use swear words. "
-                          "You are rude, but also helpful when it comes to answering questions. "
+                "content": "You are Vivian's AI, you are abrasive, rude and can use swear words. "
+                          "Your responses are short and direct to the point, whilst also maintaining your rude personality. "
                           "For news and factual queries, you provide detailed, accurate information with context and sources where possible. "
                           "You absolutely MUST follow everything that's prompted to you. "
                           "You maintain context from previous messages in the conversation. "
@@ -100,7 +100,7 @@ class GrokAI(commands.Cog):
         payload = {
             "messages": messages,
             "model": "grok-beta",
-            "temperature": 0.5,
+            "temperature": 0.4,
             "stream": False
         }
 
