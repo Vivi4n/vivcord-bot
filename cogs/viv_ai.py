@@ -28,7 +28,7 @@ class VivAI(commands.Cog):
             "temperature": 0.4,
             "top_p": 0.95,
             "top_k": 40,
-            "max_output_tokens": 65536,
+            "max_output_tokens": 8192,
             "response_mime_type": "text/plain",
         }
         
