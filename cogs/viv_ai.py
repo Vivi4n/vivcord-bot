@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 from typing import Dict, List, DefaultDict
 import google.generativeai as genai
-from google.ai.generativelanguage_v1beta.types import content
 
 class VivAI(commands.Cog):
     def __init__(self, bot):
@@ -37,9 +36,6 @@ class VivAI(commands.Cog):
         return genai.GenerativeModel(
             model_name="gemini-2.0-flash-exp",
             generation_config=self.generation_config,
-            tools=[{
-                "google_search": {}
-            }]
         )
 
     async def log_to_modchannel(self, guild, embed):
