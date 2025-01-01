@@ -37,11 +37,9 @@ class VivAI(commands.Cog):
         return genai.GenerativeModel(
             model_name="gemini-2.0-flash-exp",
             generation_config=self.generation_config,
-            tools=[
-                genai.protos.Tool(
-                    google_search=genai.protos.Tool.GoogleSearch(),
-                ),
-            ],
+            tools=[{
+                "google_search": {}
+            }]
         )
 
     async def log_to_modchannel(self, guild, embed):
