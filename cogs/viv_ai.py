@@ -5,7 +5,7 @@ import os
 from datetime import datetime, timedelta
 from collections import defaultdict
 from typing import Dict, List, DefaultDict
-import aiohttp
+from openai import OpenAI
 import json
 
 class VivAI(commands.Cog):
@@ -16,6 +16,11 @@ class VivAI(commands.Cog):
         if not self.api_key:
             self.logger.error("VIV_API_KEY environment variable not found")
         
+        self.client = OpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=self.api_key
+        )
+        
         self.conversations: DefaultDict[int, List[Dict]] = defaultdict(list)
         self.last_interaction: Dict[int, datetime] = {}
         # Max convo history length
@@ -23,8 +28,7 @@ class VivAI(commands.Cog):
         # Conversation timeout (in minutes)
         self.CONVERSATION_TIMEOUT = 60
         
-        self.api_url = "https://openrouter.ai/api/v1/chat/completions"
-        self.model = "qwen/qwen-2.5-coder-32b-instruct:free"
+        self.model = "openai/gpt-4o"
         
     async def log_to_modchannel(self, guild, embed):
         mod_channel = discord.utils.get(guild.channels, name='mod-logs')
@@ -43,7 +47,7 @@ class VivAI(commands.Cog):
 
     async def get_ai_response(self, user_id: int, prompt: str) -> str:
         if not self.api_key:
-            raise Exception("Viv AI is not properly configured - missing VIV API key")
+            raise Exception("Viv AI is not properly configured - missing OpenRouter API key")
 
         try:
             history = self.get_conversation_history(user_id)
@@ -63,35 +67,18 @@ class VivAI(commands.Cog):
             
             messages.append({"role": "user", "content": prompt})
             
-            headers = {
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-                "HTTP-Referer": "https://vivi4n.github.io",
-                "X-Title": "Viv's Discord bot"
-            }
+            completion = self.client.chat.completions.create(
+                extra_headers={
+                    "HTTP-Referer": "https://vivi4n.github.io",
+                    "X-Title": "Viv's Discord bot"
+                },
+                model=self.model,
+                messages=messages,
+                temperature=0.4,
+                max_tokens=4096
+            )
             
-            payload = {
-                "model": self.model,
-                "messages": messages,
-                "temperature": 0.4,
-                "top_p": 0.95,
-                "max_tokens": 128000,
-                "route": "direct"
-            }
-            
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    self.api_url,
-                    headers=headers,
-                    json=payload
-                ) as response:
-                    if response.status != 200:
-                        error_text = await response.text()
-                        self.logger.error(f"API Error: {response.status} - {error_text}")
-                        raise Exception(f"Viv API error: {response.status}")
-                    
-                    response_data = await response.json()
-                    ai_response = response_data['choices'][0]['message']['content']
+            ai_response = completion.choices[0].message.content
             
             history.extend([
                 {"role": "user", "content": prompt},
@@ -104,7 +91,7 @@ class VivAI(commands.Cog):
             return ai_response
 
         except Exception as e:
-            self.logger.error(f"Error in get_ai_response: {str(e)}")
+            self.logger.error(f"Error in get_ai_response: {str(e)}", exc_info=True)
             raise
 
     @commands.command(name='ai')
