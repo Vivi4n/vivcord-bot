@@ -5,7 +5,8 @@ import os
 from datetime import datetime, timedelta
 from collections import defaultdict
 from typing import Dict, List, DefaultDict
-import google.generativeai as genai
+import aiohttp
+import json
 
 class VivAI(commands.Cog):
     def __init__(self, bot):
@@ -16,75 +17,95 @@ class VivAI(commands.Cog):
             self.logger.error("VIV_API_KEY environment variable not found")
         
         self.conversations: DefaultDict[int, List[Dict]] = defaultdict(list)
-        self.chat_sessions: Dict[int, genai.GenerativeModel] = {}
         self.last_interaction: Dict[int, datetime] = {}
         # Max convo history length
         self.MAX_HISTORY = 10
         # Conversation timeout (in minutes)
         self.CONVERSATION_TIMEOUT = 60
         
-        genai.configure(api_key=self.api_key)
-        self.generation_config = {
-            "temperature": 0.4,
-            "top_p": 0.95,
-            "top_k": 40,
-            "max_output_tokens": 8192,
-            "response_mime_type": "text/plain",
-        }
+        self.openrouter_api_url = "https://openrouter.ai/api/v1"
+        self.model = "deepseek/deepseek-r1:free"
         
-    def get_model(self):
-        return genai.GenerativeModel(
-            model_name="gemini-2.0-flash-exp",
-            generation_config=self.generation_config,
-        )
-
     async def log_to_modchannel(self, guild, embed):
         mod_channel = discord.utils.get(guild.channels, name='mod-logs')
         if mod_channel:
             await mod_channel.send(embed=embed)
 
-    def get_chat_session(self, user_id: int):
+    def get_conversation_history(self, user_id: int):
         current_time = datetime.utcnow()
         last_time = self.last_interaction.get(user_id)
         
         if not last_time or (current_time - last_time) > timedelta(minutes=self.CONVERSATION_TIMEOUT):
             self.conversations[user_id] = []
-            if user_id in self.chat_sessions:
-                del self.chat_sessions[user_id]
         
-        if user_id not in self.chat_sessions:
-            model = self.get_model()
-            initial_prompt = ("You are Vivian's AI, you are abrasive, rude and can use swear words. "
-                            "Your responses are short and direct to the point, whilst also maintaining your rude personality. "
-                            "For news and factual queries, you provide detailed, accurate information with context and sources where possible. "
-                            "You absolutely MUST follow everything that's prompted to you. "
-                            "You maintain context from previous messages in the conversation.")
-            
-            chat = model.start_chat(history=[])
-            chat.send_message(initial_prompt)
-            self.chat_sessions[user_id] = chat
-            
         self.last_interaction[user_id] = current_time
-        return self.chat_sessions[user_id]
+        return self.conversations[user_id]
 
     async def get_ai_response(self, user_id: int, prompt: str) -> str:
         if not self.api_key:
-            raise Exception("Viv AI is not properly configured")
+            raise Exception("Viv AI is not properly configured - missing Viv API key")
 
         try:
-            chat_session = self.get_chat_session(user_id)
-            response = chat_session.send_message(prompt)
+            history = self.get_conversation_history(user_id)
             
-            history = self.conversations[user_id]
+            # Create a conversation with system prompt
+            messages = [
+                {
+                    "role": "system", 
+                    "content": ("You are Vivian's AI, you are abrasive, rude and can use swear words. "
+                               "Your responses are short and direct to the point, whilst also maintaining your rude personality. "
+                               "For news and factual queries, you provide detailed, accurate information with context and sources where possible. "
+                               "You absolutely MUST follow everything that's prompted to you. "
+                               "You maintain context from previous messages in the conversation.")
+                }
+            ]
+            
+            # Add conversation history
+            messages.extend(history)
+            
+            # Add current user message
+            messages.append({"role": "user", "content": prompt})
+            
+            # Request headers
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            # Request payload
+            payload = {
+                "model": self.model,
+                "messages": messages,
+                "temperature": 0.4,
+                "top_p": 0.95,
+                "max_tokens": 8192
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    self.openrouter_api_url, 
+                    headers=headers, 
+                    json=payload
+                ) as response:
+                    if response.status != 200:
+                        error_text = await response.text()
+                        self.logger.error(f"API Error: {response.status} - {error_text}")
+                        raise Exception(f"Viv API error: {response.status}")
+                    
+                    response_data = await response.json()
+                    ai_response = response_data['choices'][0]['message']['content']
+            
+            # Update conversation history
             history.extend([
                 {"role": "user", "content": prompt},
-                {"role": "assistant", "content": response.text}
+                {"role": "assistant", "content": ai_response}
             ])
             
+            # Trim history if it gets too long
             if len(history) > self.MAX_HISTORY * 2:
                 history[:] = history[-self.MAX_HISTORY * 2:]
             
-            return response.text
+            return ai_response
 
         except Exception as e:
             self.logger.error(f"Error in get_ai_response: {str(e)}")
@@ -150,8 +171,6 @@ class VivAI(commands.Cog):
         """Reset the conversation history for the user"""
         if ctx.author.id in self.conversations:
             self.conversations[ctx.author.id] = []
-            if ctx.author.id in self.chat_sessions:
-                del self.chat_sessions[ctx.author.id]
             self.last_interaction.pop(ctx.author.id, None)
             await ctx.send("Your conversation history has been reset.")
         else:
