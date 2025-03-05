@@ -76,7 +76,7 @@ class VivAI(commands.Cog):
                 "temperature": 0.4,
                 "top_p": 0.95,
                 "max_tokens": 8192,
-                "route": "fallbacks=none"
+                "route": "direct"
             }
             
             async with aiohttp.ClientSession() as session:
