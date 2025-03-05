@@ -28,7 +28,7 @@ class VivAI(commands.Cog):
         # Conversation timeout (in minutes)
         self.CONVERSATION_TIMEOUT = 60
         
-        self.model = "openai/gpt-4o"
+        self.model = "moonshotai/moonlight-16b-a3b-instruct:free"
         
     async def log_to_modchannel(self, guild, embed):
         mod_channel = discord.utils.get(guild.channels, name='mod-logs')
