@@ -28,7 +28,7 @@ class VivAI(commands.Cog):
         # Conversation timeout (in minutes)
         self.CONVERSATION_TIMEOUT = 60
         
-        self.model = "moonshotai/moonlight-16b-a3b-instruct:free"
+        self.model = "deepseek/deepseek-r1:free"
         
     async def log_to_modchannel(self, guild, embed):
         mod_channel = discord.utils.get(guild.channels, name='mod-logs')
@@ -75,7 +75,7 @@ class VivAI(commands.Cog):
                 model=self.model,
                 messages=messages,
                 temperature=0.4,
-                max_tokens=4096
+                max_tokens=163840
             )
             
             ai_response = completion.choices[0].message.content
