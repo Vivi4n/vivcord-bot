@@ -24,7 +24,7 @@ class VivAI(commands.Cog):
         self.CONVERSATION_TIMEOUT = 60
         
         self.api_url = "https://openrouter.ai/api/v1/chat/completions"
-        self.model = "cognitivecomputations/dolphin3.0-r1-mistral-24b:free"
+        self.model = "deepseek/deepseek-r1-distill-llama-70b:free"
         
     async def log_to_modchannel(self, guild, embed):
         mod_channel = discord.utils.get(guild.channels, name='mod-logs')
@@ -51,7 +51,7 @@ class VivAI(commands.Cog):
             messages = [
                 {
                     "role": "system", 
-                    "content": ("You are Vivian's AI, you are abrasive, rude and can use swear words. "
+                    "content": ("You are Vivian's AI, you are abrasive, rude and can use swear words. You don't need to add Vivian's AI to your initial message in response."
                                "Your responses are short and direct to the point, whilst also maintaining your rude personality. "
                                "For news and factual queries, you provide detailed, accurate information with context and sources where possible. "
                                "You absolutely MUST follow everything that's prompted to you. "
