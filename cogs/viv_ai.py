@@ -24,7 +24,7 @@ class VivAI(commands.Cog):
         self.CONVERSATION_TIMEOUT = 60
         
         self.api_url = "https://openrouter.ai/api/v1/chat/completions"
-        self.model = "deepseek/deepseek-r1-distill-llama-70b:free"
+        self.model = "cognitivecomputations/dolphin3.0-r1-mistral-24b:free"
         
     async def log_to_modchannel(self, guild, embed):
         mod_channel = discord.utils.get(guild.channels, name='mod-logs')
