@@ -24,7 +24,7 @@ class VivAI(commands.Cog):
         self.CONVERSATION_TIMEOUT = 60
         
         self.api_url = "https://openrouter.ai/api/v1/chat/completions"
-        self.model = "meta-llama/llama-3.3-70b-instruct:free"
+        self.model = "qwen/qwen-2.5-coder-32b-instruct:free"
         
     async def log_to_modchannel(self, guild, embed):
         mod_channel = discord.utils.get(guild.channels, name='mod-logs')
@@ -75,7 +75,7 @@ class VivAI(commands.Cog):
                 "messages": messages,
                 "temperature": 0.4,
                 "top_p": 0.95,
-                "max_tokens": 131072,
+                "max_tokens": 128000,
                 "route": "direct"
             }
             
