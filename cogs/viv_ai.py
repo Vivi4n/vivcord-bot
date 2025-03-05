@@ -75,7 +75,8 @@ class VivAI(commands.Cog):
                 "messages": messages,
                 "temperature": 0.4,
                 "top_p": 0.95,
-                "max_tokens": 8192
+                "max_tokens": 8192,
+                "route": "fallbacks=none"
             }
             
             async with aiohttp.ClientSession() as session:
