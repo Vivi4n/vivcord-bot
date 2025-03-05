@@ -23,7 +23,7 @@ class VivAI(commands.Cog):
         # Conversation timeout (in minutes)
         self.CONVERSATION_TIMEOUT = 60
         
-        self.openrouter_api_url = "https://openrouter.ai/api/v1"
+        self.api_url = "https://openrouter.ai/api/v1/chat/completions"
         self.model = "deepseek/deepseek-r1:free"
         
     async def log_to_modchannel(self, guild, embed):
@@ -43,12 +43,11 @@ class VivAI(commands.Cog):
 
     async def get_ai_response(self, user_id: int, prompt: str) -> str:
         if not self.api_key:
-            raise Exception("Viv AI is not properly configured - missing Viv API key")
+            raise Exception("Viv AI is not properly configured - missing VIV API key")
 
         try:
             history = self.get_conversation_history(user_id)
             
-            # Create a conversation with system prompt
             messages = [
                 {
                     "role": "system", 
@@ -60,19 +59,17 @@ class VivAI(commands.Cog):
                 }
             ]
             
-            # Add conversation history
             messages.extend(history)
             
-            # Add current user message
             messages.append({"role": "user", "content": prompt})
             
-            # Request headers
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://vivi4n.github.io",
+                "X-Title": "Viv's Discord bot"
             }
             
-            # Request payload
             payload = {
                 "model": self.model,
                 "messages": messages,
@@ -83,8 +80,8 @@ class VivAI(commands.Cog):
             
             async with aiohttp.ClientSession() as session:
                 async with session.post(
-                    self.openrouter_api_url, 
-                    headers=headers, 
+                    self.api_url,
+                    headers=headers,
                     json=payload
                 ) as response:
                     if response.status != 200:
@@ -95,13 +92,11 @@ class VivAI(commands.Cog):
                     response_data = await response.json()
                     ai_response = response_data['choices'][0]['message']['content']
             
-            # Update conversation history
             history.extend([
                 {"role": "user", "content": prompt},
                 {"role": "assistant", "content": ai_response}
             ])
             
-            # Trim history if it gets too long
             if len(history) > self.MAX_HISTORY * 2:
                 history[:] = history[-self.MAX_HISTORY * 2:]
             
