@@ -75,7 +75,7 @@ class VivAI(commands.Cog):
                 model=self.model,
                 messages=messages,
                 temperature=0.4,
-                max_tokens=163840
+                max_tokens=16384
             )
             
             ai_response = completion.choices[0].message.content
