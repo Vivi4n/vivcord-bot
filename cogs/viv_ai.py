@@ -28,7 +28,7 @@ class VivAI(commands.Cog):
         # Conversation timeout (in minutes)
         self.CONVERSATION_TIMEOUT = 60
         
-        self.model = "meta-llama/llama-3.3-8b-instruct:free"
+        self.model = "microsoft/phi-4-reasoning:free"
         
     async def log_to_modchannel(self, guild, embed):
         mod_channel = discord.utils.get(guild.channels, name='mod-logs')
